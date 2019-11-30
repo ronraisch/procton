@@ -7,6 +7,7 @@ class GameState:
     # the positive rotation in the board is in the white's direction
     # the first index of eating places are for whites
     # move="out" => removing soldier from game
+
     INITIAL_SOLDIER = 0
     NUMBER_OF_POSITIONS = 26 + INITIAL_SOLDIER
     NUMBER_OF_SOLDIERS = 15
@@ -15,6 +16,9 @@ class GameState:
     MAX_DICE_VALUE = 6
     KILLED_SOLDIERS_INDEX = NUMBER_OF_POSITIONS + INITIAL_SOLDIER
     DICE_RESULT = KILLED_SOLDIERS_INDEX + 2
+    score1 = np.power(np.arange(-NUMBER_OF_POSITIONS / 2 + 1, 0), 3)
+    score2 = np.power(np.arange(1, NUMBER_OF_POSITIONS / 2), 3)
+    SCORE = np.concatenate((score1, -score2))
 
     def __init__(self, l):
         self.state = l
@@ -63,14 +67,15 @@ class GameState:
         possible_moves = []
         dice_result = self.state[GameState.DICE_RESULT:GameState.DICE_RESULT + 2]
         for i in range(GameState.NUMBER_OF_POSITIONS):
-            if GameState.is_legal_move(self.state, [i, i + dice_result[0]], player_turn):
-                move1 = [i, i + dice_result[0]]
+            move1 = [i, i + dice_result[0] * player_turn]
+            if GameState.is_legal_move(self.state, move1, player_turn):
                 eval_state = GameState.make_move_on_state([move1], self.state, player_turn)
             else:
                 continue
             for j in range(GameState.NUMBER_OF_POSITIONS):
-                if GameState.is_legal_move(eval_state, [j, j + dice_result[1]], player_turn):
-                    possible_moves.append([move1, [j, j + dice_result[1]]])
+                move2=[j, j + dice_result[1]*player_turn]
+                if GameState.is_legal_move(eval_state, move2, player_turn):
+                    possible_moves.append([move1, move2])
         return possible_moves
 
     @staticmethod
@@ -110,13 +115,14 @@ class GameState:
         # if move[0] is in the same color of the player.
         if state[move[0]] * player_turn <= 0:
             return False
+
+
         dice_result = state[GameState.DICE_RESULT:GameState.DICE_RESULT + 2]
 
         # if move corresponds to dice results
         # TODO: check if condition necessary (for optimization)
         if (move[1] - move[0]) * player_turn not in dice_result:
             return False
-
         # if move in the board
         if move[1] >= GameState.NUMBER_OF_POSITIONS:
             return False
@@ -145,9 +151,15 @@ class GameState:
                 tmp_state[GameState.KILLED_SOLDIERS_INDEX + (player_turn + 1) / 2] += 1
         return tmp_state
 
+    def get_open_houses(self):
+        total = 0
+        for pos in self.state[1:GameState.NUMBER_OF_POSITIONS - 1]:
+            if np.abs(pos) == 1:
+                total += pos
+        return total
+
     def evaluate(self):
-        score = np.arange(-GameState.NUMBER_OF_POSITIONS / 2 + 1, GameState.NUMBER_OF_POSITIONS / 2)
-        return np.dot(score, self.state[1:GameState.NUMBER_OF_POSITIONS])
+        return np.dot(GameState.SCORE, self.state[1:GameState.NUMBER_OF_POSITIONS - 1])+GameState.SCORE[0]*self.get_open_houses()
 
 # # add eating and removing soldiers
 #         possible_moves = []

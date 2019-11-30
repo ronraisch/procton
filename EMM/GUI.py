@@ -5,7 +5,7 @@ import matplotlib.patches as patches
 # white starts at the bottom left
 INITIAL_STATE = np.array(
     [0, 2.0, 0, 0, 0, 0, -5.0, 0, -3.0, 0, 0, 0, 5.0, -5.0, 0, 0, 0, 3.0, 0, 5.0, 0, 0, 0, 0, -2.0,
-     0, 0, 0, 6, 6])
+     0, 0, 0, 6, 1])
 test_state = np.array(
     [0, 0, 0, 0, 0, 0, -6.0, 0, -3.0, 0, 0, 0, 0, -5.0, 0, 0, 0, 0, 0, 5.0, 5.0, 5.0, 0, 0, -1.0,
      0, 0, 0, 5, 3])
@@ -22,7 +22,7 @@ def GUI_state(l):
     for pos in x[1:]:
         plt.plot(np.ones_like(x) * pos - 1.0 / NUM_OF_POSITIONS,
                  (x - 1.0 / 2 / NUM_OF_POSITIONS) * 1.05, 'r')
-    print(l)
+    # print(l)
     x_rect = 1 + 1 / SOLDIERS_IN_ROW
     y_rect = 0.2
     plt.text(x_rect, y_rect / 2,
