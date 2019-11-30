@@ -62,9 +62,9 @@ def GUI_state(l):
     plt.show()
 
 
-my_state = GameState(test_state)
-all_states = my_state.get_possible_states(1)
-for state in all_states:
-    GUI_state(state)
+# my_state = GameState(test_state)
+# all_states = my_state.get_possible_states(1)
+# for state in all_states:
+#     GUI_state(state)
 
 # GUI_state(test_state)

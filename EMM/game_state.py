@@ -11,11 +11,17 @@ class GameState:
     NUMBER_OF_POSITIONS = 26 + INITIAL_SOLDIER
     NUMBER_OF_SOLDIERS = 15
     HOME_SIZE = 6
+    MIN_DICE_VALUE = 1
+    MAX_DICE_VALUE = 6
     KILLED_SOLDIERS_INDEX = NUMBER_OF_POSITIONS + INITIAL_SOLDIER
     DICE_RESULT = KILLED_SOLDIERS_INDEX + 2
 
     def __init__(self, l):
         self.state = l
+
+    def game_over(self):
+        return self.state[GameState.NUMBER_OF_SOLDIERS - 1] == GameState.NUMBER_OF_SOLDIERS or \
+               self.state[0] == GameState.NUMBER_OF_SOLDIERS
 
     @staticmethod
     def check_endgame(state, player_turn):
@@ -138,6 +144,10 @@ class GameState:
                 tmp_state[move[1]] += player_turn
                 tmp_state[GameState.KILLED_SOLDIERS_INDEX + (player_turn + 1) / 2] += 1
         return tmp_state
+
+    def evaluate(self):
+        score = np.arange(-GameState.NUMBER_OF_POSITIONS / 2 + 1, GameState.NUMBER_OF_POSITIONS / 2)
+        return np.dot(score, self.state[1:GameState.NUMBER_OF_POSITIONS])
 
 # # add eating and removing soldiers
 #         possible_moves = []
