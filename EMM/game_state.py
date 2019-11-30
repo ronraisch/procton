@@ -19,6 +19,7 @@ class GameState:
     score1 = np.power(np.arange(-NUMBER_OF_POSITIONS / 2 + 1, 0), 3)
     score2 = np.power(np.arange(1, NUMBER_OF_POSITIONS / 2), 3)
     SCORE = np.concatenate((score1, -score2))
+    KILLED_SOLDIER = "killed"
 
     def __init__(self, l):
         self.state = l
@@ -63,6 +64,13 @@ class GameState:
             return True and GameState.check_endgame(state, player_turn)
         return False
 
+    def check_eaten(self, player_turn):
+        return self.state[GameState.KILLED_SOLDIERS_INDEX + (-player_turn + 1) / 2] > 0
+
+    def get_move_iterator(self,player_turn):
+        if GameState.check_eaten(self.state,player_turn):
+            return [[]]
+
     def get_possible_moves(self, player_turn):
         possible_moves = []
         dice_result = self.state[GameState.DICE_RESULT:GameState.DICE_RESULT + 2]
@@ -73,7 +81,7 @@ class GameState:
             else:
                 continue
             for j in range(GameState.NUMBER_OF_POSITIONS):
-                move2=[j, j + dice_result[1]*player_turn]
+                move2 = [j, j + dice_result[1] * player_turn]
                 if GameState.is_legal_move(eval_state, move2, player_turn):
                     possible_moves.append([move1, move2])
         return possible_moves
@@ -110,12 +118,33 @@ class GameState:
         return self.get_possible_states_double(player_turn)
 
     @staticmethod
+    def get_free_spots(state,player_turn):
+        # get the initial index for searching
+        index = (GameState.NUMBER_OF_POSITIONS - 2) * ( -player_turn + 1) / 2+(player_turn+1)/2
+        free_sposts=[]
+        # searching for spots with player_turn type or empty or with one enemy soldier
+        for i in range(index,index+player_turn*GameState.HOME_SIZE,player_turn):
+            if state[i]*player_turn>=-1:
+                free_sposts.append(i)
+        return free_sposts
+
+    @staticmethod
+    def is_legal_move_eaten(state, move, player_turn):
+        free_spots=GameState.get_free_spots(state,player_turn)
+        if int(move[0]) in free_spots:
+            return True
+        return False
+
+    @staticmethod
     def is_legal_move(state, move, player_turn):
+        # handling with soldier coming back from the dead
+        if GameState.check_eaten(state,player_turn):
+            return GameState.is_legal_move_eaten(state,move,player_turn)
+
         move = [int(move[0]), int(move[1])]
         # if move[0] is in the same color of the player.
         if state[move[0]] * player_turn <= 0:
             return False
-
 
         dice_result = state[GameState.DICE_RESULT:GameState.DICE_RESULT + 2]
 
@@ -131,7 +160,7 @@ class GameState:
         # if state[move[1]] is available
         if state[move[1]] * player_turn < -1:
             return False
-
+        # trying to remove soldiers before endgame
         if move[1] == (GameState.NUMBER_OF_POSITIONS - 1) * (
                 player_turn + 1) / 2 and not GameState.check_endgame(state, player_turn):
             return False
@@ -141,10 +170,18 @@ class GameState:
     def make_move_on_state(moves, state, player_turn):
         tmp_state = state.copy()
         for move in moves:
+            # fixing int problems
             move = [int(move[0]), int(move[1])]
-            # making the move
-            tmp_state[move[0]] -= player_turn
-            tmp_state[move[1]] += player_turn
+            # bringing back eaten soldier
+            if move[1] == GameState.KILLED_SOLDIER:
+                tmp_state[move[0]] += player_turn
+                tmp_state[GameState.KILLED_SOLDIERS_INDEX + (player_turn + 1) / 2] -= 1
+                # for the case where I eat with my eaten soldier
+                move[1] = move[0]
+            else:
+                # making the normal move
+                tmp_state[move[0]] -= player_turn
+                tmp_state[move[1]] += player_turn
             # handling with eating concept
             if tmp_state[move[1]] == 0:
                 tmp_state[move[1]] += player_turn
@@ -153,13 +190,27 @@ class GameState:
 
     def get_open_houses(self):
         total = 0
+        # counting each open house => |state|=1
         for pos in self.state[1:GameState.NUMBER_OF_POSITIONS - 1]:
             if np.abs(pos) == 1:
                 total += pos
         return total
 
-    def evaluate(self):
-        return np.dot(GameState.SCORE, self.state[1:GameState.NUMBER_OF_POSITIONS - 1])+GameState.SCORE[0]*self.get_open_houses()
+    def get_eaten(self):
+        # number of killed white soldiers - black soldiers
+        return self.state[GameState.KILLED_SOLDIERS_INDEX] - self.state[
+            GameState.KILLED_SOLDIERS_INDEX + 1]
+
+    def get_soldiers_positions(self):
+        # returning just the board position part from the state vector
+        return self.state[1:GameState.NUMBER_OF_POSITIONS - 1]
+
+    # Evaluation function for board state
+    def evaluate(self, player_turn):
+        return np.dot(GameState.SCORE,
+                      self.state[1:GameState.NUMBER_OF_POSITIONS - 1]) - player_turn * \
+               np.max(GameState.SCORE) * self.get_open_houses() + 3 * player_turn * np.max(
+            GameState.SCORE) * self.get_eaten()
 
 # # add eating and removing soldiers
 #         possible_moves = []
