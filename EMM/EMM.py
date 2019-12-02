@@ -5,6 +5,9 @@ from GUI import *
 
 def set_dices(state):
     r = np.random.randint(1, 7, 2)
+    x=[]
+    if type(state)==type(x):
+        state=np.array(state)
     state[GameState.DICE_RESULT:GameState.DICE_RESULT + 2] = r
 
 
@@ -67,12 +70,14 @@ def EMM_wo_dices(state_list, depth, alpha, beta, player_turn):
 # my_state = GameState(np.array(result[1]))
 # print(my_state.evaluate())
 
+np.random.seed(324)
 board = INITIAL_STATE
 p = 1
 for i in range(20):
     result = EMM(board, 1, p)
     GUI_state(board)
     board = result[1]
+    # print(board)
     set_dices(board)
     p *= -1
 

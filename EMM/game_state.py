@@ -64,24 +64,49 @@ class GameState:
             return True and GameState.check_endgame(state, player_turn)
         return False
 
-    def check_eaten(self, player_turn):
-        return self.state[GameState.KILLED_SOLDIERS_INDEX + (-player_turn + 1) / 2] > 0
+    @staticmethod
+    def check_eaten(state, player_turn):
+        return state[GameState.KILLED_SOLDIERS_INDEX + (-player_turn + 1) / 2] > 0
 
-    def get_move_iterator(self,player_turn):
-        if GameState.check_eaten(self.state,player_turn):
-            return [[]]
+    def get_move_iterator(self, player_turn, dice_val):
+        moves = []
+        # 1->24
+        # ....6->19 for player_turn=1
+        # dice->dice for player_turn=-1
+        dice_white = GameState.NUMBER_OF_POSITIONS - 1 - dice_val
+        dice_pos = (1 + player_turn) / 2 * dice_val + (1 - player_turn) / 2 * dice_white
+        if GameState.check_eaten(self.state, player_turn):
+            return [[dice_pos, GameState.KILLED_SOLDIER]]
+        if GameState.check_endgame(self.state, player_turn):
+            if self.state[dice_pos] * player_turn > 0:
+                moves.append(
+                    [dice_pos, (GameState.NUMBER_OF_POSITIONS - 1) * (1 + player_turn) / 2])
+            first_index = (1 - player_turn) / 2 + (1 + player_turn) / 2 * (
+                    GameState.NUMBER_OF_POSITIONS - 2)
+            for i in range(first_index, first_index - player_turn * GameState.HOME_SIZE,
+                           -player_turn):
+                if GameState.NUMBER_OF_POSITIONS - 1 > i - dice_val * player_turn > 0 and \
+                        self.state[i] * player_turn > 0:
+                    moves.append([i, i - dice_val * player_turn])
+            if len(moves) == 0:
+                moves.append([GameState.find_highest_position(self.state, player_turn),
+                              (GameState.NUMBER_OF_POSITIONS - 1) * (1 + player_turn) / 2])
+        else:
+            for i in range(GameState.NUMBER_OF_POSITIONS):
+                moves.append([i, i + dice_val * player_turn])
+        return moves
 
     def get_possible_moves(self, player_turn):
         possible_moves = []
         dice_result = self.state[GameState.DICE_RESULT:GameState.DICE_RESULT + 2]
-        for i in range(GameState.NUMBER_OF_POSITIONS):
-            move1 = [i, i + dice_result[0] * player_turn]
+        moves1 = self.get_move_iterator(player_turn, dice_result[0])
+        for move1 in moves1:
             if GameState.is_legal_move(self.state, move1, player_turn):
                 eval_state = GameState.make_move_on_state([move1], self.state, player_turn)
             else:
                 continue
-            for j in range(GameState.NUMBER_OF_POSITIONS):
-                move2 = [j, j + dice_result[1] * player_turn]
+            moves2 = self.get_move_iterator(player_turn, dice_result[1])
+            for move2 in moves2:
                 if GameState.is_legal_move(eval_state, move2, player_turn):
                     possible_moves.append([move1, move2])
         return possible_moves
@@ -106,6 +131,8 @@ class GameState:
             new_possible_states += tmp_states
         if (len(new_possible_states)) > 1:
             return np.unique(new_possible_states, axis=0)
+        if len(new_possible_states)==0:
+            return [self.state]
         return new_possible_states
 
     def get_possible_states(self, player_turn):
@@ -114,32 +141,33 @@ class GameState:
             possible_states = []
             for move in possible_moves:
                 possible_states.append(GameState.make_move_on_state(move, self.state, player_turn))
+            if len(possible_moves) == 0:
+                return [self.state]
             return possible_states
         return self.get_possible_states_double(player_turn)
 
     @staticmethod
-    def get_free_spots(state,player_turn):
+    def get_free_spots(state, player_turn):
         # get the initial index for searching
-        index = (GameState.NUMBER_OF_POSITIONS - 2) * ( -player_turn + 1) / 2+(player_turn+1)/2
-        free_sposts=[]
+        index = (GameState.NUMBER_OF_POSITIONS - 2) * (-player_turn + 1) / 2 + (player_turn + 1) / 2
+        free_sposts = []
         # searching for spots with player_turn type or empty or with one enemy soldier
-        for i in range(index,index+player_turn*GameState.HOME_SIZE,player_turn):
-            if state[i]*player_turn>=-1:
+        for i in range(index, index + player_turn * GameState.HOME_SIZE, player_turn):
+            if state[i] * player_turn >= -1:
                 free_sposts.append(i)
         return free_sposts
 
     @staticmethod
     def is_legal_move_eaten(state, move, player_turn):
-        free_spots=GameState.get_free_spots(state,player_turn)
-        if int(move[0]) in free_spots:
+        if state[int(move[0])] * player_turn >= -1:
             return True
         return False
 
     @staticmethod
     def is_legal_move(state, move, player_turn):
         # handling with soldier coming back from the dead
-        if GameState.check_eaten(state,player_turn):
-            return GameState.is_legal_move_eaten(state,move,player_turn)
+        if GameState.check_eaten(state, player_turn):
+            return GameState.is_legal_move_eaten(state, move, player_turn)
 
         move = [int(move[0]), int(move[1])]
         # if move[0] is in the same color of the player.
@@ -169,16 +197,19 @@ class GameState:
     @staticmethod
     def make_move_on_state(moves, state, player_turn):
         tmp_state = state.copy()
+        if len(moves) == 0:
+            return state
         for move in moves:
-            # fixing int problems
-            move = [int(move[0]), int(move[1])]
             # bringing back eaten soldier
             if move[1] == GameState.KILLED_SOLDIER:
+                move[0] = int(move[0])
                 tmp_state[move[0]] += player_turn
-                tmp_state[GameState.KILLED_SOLDIERS_INDEX + (player_turn + 1) / 2] -= 1
+                tmp_state[GameState.KILLED_SOLDIERS_INDEX + (-player_turn + 1) / 2] -= 1
                 # for the case where I eat with my eaten soldier
                 move[1] = move[0]
             else:
+                # fixing int problems
+                move = [int(move[0]), int(move[1])]
                 # making the normal move
                 tmp_state[move[0]] -= player_turn
                 tmp_state[move[1]] += player_turn
