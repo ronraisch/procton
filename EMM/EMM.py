@@ -11,6 +11,7 @@ def set_dices(state):
     state[GameState.DICE_RESULT:GameState.DICE_RESULT + 2] = r
 
 
+
 def get_prob(state):
     if state[GameState.DICE_RESULT] == state[GameState.DICE_RESULT + 1]:
         return 1 / 36
