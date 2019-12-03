@@ -48,7 +48,7 @@ def GUI_state(l):
     l_abs = np.abs(l)
 
     for i in range(len(l)):
-        col = "w" * (l[i] > 0) + "k" * (l[i] < 0)
+        col = "w" * int(l[i] > 0) + "k" * int(l[i] < 0)
         shift = (i >= SOLDIERS_IN_ROW)
         if l[i] == 0:
             continue

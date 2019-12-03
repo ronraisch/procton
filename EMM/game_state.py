@@ -30,10 +30,10 @@ class GameState:
 
     @staticmethod
     def check_endgame(state, player_turn):
-        dummie = (GameState.NUMBER_OF_POSITIONS - GameState.HOME_SIZE - 2) / 2
-        first_index = dummie * (player_turn + 1) + 1
+        dummie = (GameState.NUMBER_OF_POSITIONS - GameState.HOME_SIZE - 2) // 2
+        first_index = int(dummie * (player_turn + 1) + 1)
         sum = state[(GameState.NUMBER_OF_POSITIONS - 1) * (
-                player_turn + 1) / 2]
+                player_turn + 1) // 2]
         for i in range(first_index, first_index + GameState.HOME_SIZE):
             if state[i] * player_turn > 0:
                 sum += state[i]
@@ -66,7 +66,7 @@ class GameState:
 
     @staticmethod
     def check_eaten(state, player_turn):
-        return state[GameState.KILLED_SOLDIERS_INDEX + (-player_turn + 1) / 2] > 0
+        return state[GameState.KILLED_SOLDIERS_INDEX + (-player_turn + 1) // 2] > 0
 
     def get_move_iterator(self, player_turn, dice_val):
         moves = []
@@ -204,7 +204,7 @@ class GameState:
             if move[1] == GameState.KILLED_SOLDIER:
                 move[0] = int(move[0])
                 tmp_state[move[0]] += player_turn
-                tmp_state[GameState.KILLED_SOLDIERS_INDEX + (-player_turn + 1) / 2] -= 1
+                tmp_state[GameState.KILLED_SOLDIERS_INDEX + (-player_turn + 1) // 2] -= 1
                 # for the case where I eat with my eaten soldier
                 move[1] = move[0]
             else:
@@ -216,7 +216,7 @@ class GameState:
             # handling with eating concept
             if tmp_state[move[1]] == 0:
                 tmp_state[move[1]] += player_turn
-                tmp_state[GameState.KILLED_SOLDIERS_INDEX + (player_turn + 1) / 2] += 1
+                tmp_state[GameState.KILLED_SOLDIERS_INDEX + (player_turn + 1) // 2] += 1
         return tmp_state
 
     def get_open_houses(self):
