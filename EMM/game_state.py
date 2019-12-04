@@ -29,6 +29,11 @@ class GameState:
                self.state[0] == GameState.NUMBER_OF_SOLDIERS
 
     @staticmethod
+    def is_double(state):
+        dice_result = state[GameState.DICE_RESULT:GameState.DICE_RESULT + 2]
+        return dice_result[0] == dice_result[1]
+
+    @staticmethod
     def check_endgame(state, player_turn):
         dummie = (GameState.NUMBER_OF_POSITIONS - GameState.HOME_SIZE - 2) // 2
         first_index = int(dummie * (player_turn + 1) + 1)
@@ -97,6 +102,22 @@ class GameState:
         return moves
 
     def get_possible_states(self, player_turn):
+        if not GameState.check_eaten(self.state, player_turn):
+            return self.get_possible_states_wo_eaten(player_turn)
+        else:
+            board = self.state.copy()
+            board[GameState.DICE_RESULT:GameState.DICE_RESULT + 2] = [
+                board[GameState.DICE_RESULT + 1], board[GameState.DICE_RESULT]]
+            other_dices = GameState(board)
+            possible_states = self.get_possible_states_wo_eaten(
+                player_turn) + other_dices.get_possible_states_wo_eaten(player_turn)
+            possible_states = [list(a) for a in possible_states]
+            if list(self.state) in possible_states:
+                possible_states.remove(list(self.state))
+            possible_states = [np.array(x) for x in possible_states]
+            return np.unique(possible_states, axis=0)
+
+    def get_possible_states_wo_eaten(self, player_turn):
         possible_states = []
         dice_result = self.state[GameState.DICE_RESULT:GameState.DICE_RESULT + 2]
         moves1 = self.get_move_iterator(player_turn, dice_result[0])
@@ -107,20 +128,13 @@ class GameState:
                     print(move1)
             else:
                 continue
-            tmp=GameState(eval_state1)
+            tmp = GameState(eval_state1)
             moves2 = tmp.get_move_iterator(player_turn, dice_result[1])
             for move2 in moves2:
                 if GameState.is_legal_move(eval_state1, move2, player_turn):
                     eval_state2 = GameState.make_move_on_state([move2], eval_state1, player_turn)
                     possible_states.append(eval_state2)
         return possible_states
-
-    @staticmethod
-    def is_double(state):
-        dice_result = state[GameState.DICE_RESULT:GameState.DICE_RESULT + 2]
-        return dice_result[0] == dice_result[1]
-
-
 
     @staticmethod
     def get_free_spots(state, player_turn):
@@ -244,32 +258,32 @@ class GameState:
 #         return possible_moves
 
 
-    # def get_possible_states_double(self, player_turn):
-    #     possible_moves = self.get_possible_moves(player_turn)
-    #     possible_states = []
-    #     for move in possible_moves:
-    #         possible_states.append(GameState.make_move_on_state(move, self.state, player_turn))
-    #     new_possible_states = []
-    #     for state in possible_states:
-    #         tmp_state = GameState(state)
-    #         possible_moves = tmp_state.get_possible_moves(player_turn)
-    #         tmp_states = []
-    #         for move in possible_moves:
-    #             tmp_states.append(GameState.make_move_on_state(move, tmp_state.state, player_turn))
-    #         new_possible_states += tmp_states
-    #     if (len(new_possible_states)) > 1:
-    #         return np.unique(new_possible_states, axis=0)
-    #     if len(new_possible_states)==0:
-    #         return [self.state]
-    #     return new_possible_states
-    #
-    # def get_possible_states(self, player_turn):
-    #     if not GameState.is_double(self.state):
-    #         possible_moves = self.get_possible_moves(player_turn)
-    #         possible_states = []
-    #         for move in possible_moves:
-    #             possible_states.append(GameState.make_move_on_state(move, self.state, player_turn))
-    #         if len(possible_moves) == 0:
-    #             return [self.state]
-    #         return possible_states
-    #     return self.get_possible_states_double(player_turn)
+# def get_possible_states_double(self, player_turn):
+#     possible_moves = self.get_possible_moves(player_turn)
+#     possible_states = []
+#     for move in possible_moves:
+#         possible_states.append(GameState.make_move_on_state(move, self.state, player_turn))
+#     new_possible_states = []
+#     for state in possible_states:
+#         tmp_state = GameState(state)
+#         possible_moves = tmp_state.get_possible_moves(player_turn)
+#         tmp_states = []
+#         for move in possible_moves:
+#             tmp_states.append(GameState.make_move_on_state(move, tmp_state.state, player_turn))
+#         new_possible_states += tmp_states
+#     if (len(new_possible_states)) > 1:
+#         return np.unique(new_possible_states, axis=0)
+#     if len(new_possible_states)==0:
+#         return [self.state]
+#     return new_possible_states
+#
+# def get_possible_states(self, player_turn):
+#     if not GameState.is_double(self.state):
+#         possible_moves = self.get_possible_moves(player_turn)
+#         possible_states = []
+#         for move in possible_moves:
+#             possible_states.append(GameState.make_move_on_state(move, self.state, player_turn))
+#         if len(possible_moves) == 0:
+#             return [self.state]
+#         return possible_states
+#     return self.get_possible_states_double(player_turn)
