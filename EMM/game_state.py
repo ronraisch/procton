@@ -79,7 +79,7 @@ class GameState:
         # ....6->19 for player_turn=1
         # dice->dice for player_turn=-1
         dice_white = GameState.NUMBER_OF_POSITIONS - 1 - dice_val
-        dice_pos = (1 + player_turn) / 2 * dice_val + (1 - player_turn) / 2 * dice_white
+        dice_pos = int((1 + player_turn) / 2 * dice_val + (1 - player_turn) / 2 * dice_white)
         if GameState.check_eaten(self.state, player_turn):
             return [[dice_pos, GameState.KILLED_SOLDIER]]
         if GameState.check_endgame(self.state, player_turn):
