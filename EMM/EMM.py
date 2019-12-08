@@ -83,3 +83,4 @@ for i in range(10):
     set_dices(board)
     p *= -1
 
+
