@@ -126,10 +126,6 @@ class GameState:
         possible_states = []
         dice_result = self.state[GameState.DICE_RESULT:GameState.DICE_RESULT + 2]
         moves1 = self.get_move_iterator(player_turn, dice_result[0])
-        # play2=True
-        # if len(moves1) == 0:
-        #     moves1 = self.get_move_iterator(player_turn, dice_result[1])
-        #     play2=False or not play2
         counter = 0
         for move1 in moves1:
             eval_state1 = None
@@ -166,25 +162,6 @@ class GameState:
         if len(new_possible_states) == 0:
             return [self.state]
         return new_possible_states
-
-        # dice_result = self.state[GameState.DICE_RESULT:GameState.DICE_RESULT + 2]
-        # moves1 = self.get_move_iterator(player_turn, dice_result[0])
-        # for move1 in moves1:
-        #     if GameState.is_legal_move(self.state, move1, player_turn):
-        #         possible_states.append(GameState.make_move_on_state([move1], self.state, player_turn))
-        # new_possible_states = []
-        # for state in possible_states:
-        #     tmp_state = GameState(state)
-        #     possible_moves = tmp_state.get_move_iterator(player_turn, self.state[GameState.DICE_RESULT])
-        #     tmp_states = []
-        #     for move in possible_moves:
-        #         tmp_states.append(GameState.make_move_on_state([move], tmp_state.state, player_turn))
-        #     new_possible_states += tmp_states
-        # if (len(new_possible_states)) > 1:
-        #     return np.unique(new_possible_states, axis=0)
-        # if len(new_possible_states) == 0:
-        #     return [self.state]
-        # return new_possible_states
 
     @staticmethod
     def get_free_spots(state, player_turn):
@@ -260,18 +237,31 @@ class GameState:
 
         return tmp_state
 
-    def get_open_houses(self):
+    def get_open_houses(self, player_turn):
         total = 0
         # counting each open house => |state|=1
-        for pos in self.state[1:GameState.NUMBER_OF_POSITIONS - 1]:
-            if np.abs(pos) == 1:
-                total += pos
+        for i in range(1, GameState.NUMBER_OF_POSITIONS - 1):
+            if self.state[i] * player_turn == 1:
+                total += i * (player_turn + 1) // 2 + (25 - i) * (player_turn - 1) // -2
         return total
 
-    def get_eaten(self):
-        # number of killed white soldiers - black soldiers
-        return self.state[GameState.KILLED_SOLDIERS_INDEX] - self.state[
-            GameState.KILLED_SOLDIERS_INDEX + 1]
+    def get_eaten(self, player_turn):
+        # number of killed soldiers
+        return self.state[GameState.KILLED_SOLDIERS_INDEX + (-player_turn + 1) // 2]
+
+    def value_of_houses(self, player_turn):
+        total = 0
+        for pos in self.state[1:GameState.NUMBER_OF_POSITIONS - 1]:
+            if pos * player_turn > 1:
+                total += GameState.value_of_house(pos * player_turn)
+        return total
+
+    @staticmethod
+    def value_of_house(size):
+        for i in range(2, 6):
+            if size == i:
+                return 2 ** (7 - i)
+        return 2
 
     def get_soldiers_positions(self):
         # returning just the board position part from the state vector
@@ -279,42 +269,8 @@ class GameState:
 
     # Evaluation function for board state
     def evaluate(self, player_turn):
-        return np.dot(GameState.SCORE,
-                      self.state[1:GameState.NUMBER_OF_POSITIONS - 1]) - player_turn * \
-               np.max(GameState.SCORE) * self.get_open_houses() + 3 * player_turn * np.max(
-            GameState.SCORE) * self.get_eaten()
-
-# # add eating and removing soldiers
-#         possible_moves = []
-#         dice_result = self.state[GameState.DICE_RESULT:GameState.DICE_RESULT + 2]
-#         endgame = False
-#         # solve double situation
-#         if dice_result[0] == dice_result[1]:
-#             dice_result += dice_result
-#         for result in dice_result:
-#             move = []
-#             tmp_state = self.state
-#             # looping through all positions on board
-#             for i in range(GameState.INITIAL_SOLDIER, GameState.NUMBER_OF_POSITIONS):
-#                 # checking if this spot on the board is occupied by our player
-#                 if player_turn * self.state[i] > 0:
-#                     next_index = int(i + player_turn * result)
-#                 # checking if there are opponent's soldiers on the dices' positions
-#                     if (player_turn * tmp_state[next_index] >= 0):
-#                         tmp_state = GameState.make_move_on_state([[i, next_index]], tmp_state, player_turn)
-#                         move.append([i, next_index])
-#             possible_moves.append(move)
-#         return possible_moves
-
-
-#
-# def get_possible_states(self, player_turn):
-#     if not GameState.is_double(self.state):
-#         possible_moves = self.get_possible_moves(player_turn)
-#         possible_states = []
-#         for move in possible_moves:
-#             possible_states.append(GameState.make_move_on_state(move, self.state, player_turn))
-#         if len(possible_moves) == 0:
-#             return [self.state]
-#         return possible_states
-#     return self.get_possible_states_double(player_turn)
+        return GameState.value_of_houses(self, player_turn) - 7 ** GameState.get_open_houses(self, player_turn)
+        # return np.dot(GameState.SCORE,
+        #               self.state[1:GameState.NUMBER_OF_POSITIONS - 1]) - player_turn * \
+        #        np.max(GameState.SCORE) * self.get_open_houses() + 3 * player_turn * np.max(
+        #     GameState.SCORE) * self.get_eaten()

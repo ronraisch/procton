@@ -26,7 +26,7 @@ def EMM(state_list, depth, player_turn):
     max_val = -np.inf
     max_state = None
     for board in state.get_possible_states(player_turn):
-        result = EMM_wo_dices(board, depth - 1, -np.inf, -np.inf, -player_turn)
+        result = EMM_wo_dices(board, depth - 1, -np.inf, -np.inf, player_turn)
         if result[0] > max_val:
             max_val = result[0]
             max_state = board
@@ -71,15 +71,15 @@ def EMM_wo_dices(state_list, depth, alpha, beta, player_turn):
 # my_state = GameState(np.array(result[1]))
 # print(my_state.evaluate())
 # GUI_state(INITIAL_STATE)
-np.random.seed(333)
+
+np.random.seed(687)
 board = INITIAL_STATE
 p = 1
-for i in range(40):
+for i in range(10):
     # print(board)
     GUI_state(board)
     result = EMM(board, 1, p)
     board = result[1]
     set_dices(board)
     p *= -1
-
 
