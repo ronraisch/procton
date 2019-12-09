@@ -5,27 +5,16 @@ import os
 import os.path
 
 
-def foreground_poc(threshold, diff_path, std_dir):
-    if threshold == 0:
-        threshold = 10
+def calc_std(std_dir, hsv):
     std_file_count = len([name for name in os.listdir(std_dir)])
     new_length = 360
     new_width = 640
-    hsv = True
     std_values_r = np.ndarray((std_file_count + 1, new_length, new_width), int)
     std_values_g = np.ndarray((std_file_count + 1, new_length, new_width), int)
     std_values_b = np.ndarray((std_file_count + 1, new_length, new_width), int)
-    orig = cv2.imread(diff_path, cv2.IMREAD_COLOR)
-    diff = orig
-    if hsv:
-        diff = cv2.cvtColor(orig, cv2.COLOR_BGR2HSV)
-    [diff1, diff2, diff3] = cv2.split(diff)
-    diff1 = cv2.resize(diff1, (new_width, new_length))
-    diff2 = cv2.resize(diff2, (new_width, new_length))
-    diff3 = cv2.resize(diff3, (new_width, new_length))
     count = 0
     for file in os.listdir(std_dir):
-        std = cv2.imread(std_dir+'\\'+file, cv2.IMREAD_COLOR)
+        std = cv2.imread(std_dir + '\\' + file, cv2.IMREAD_COLOR)
         plt.imshow(std)
         if hsv:
             std = cv2.cvtColor(std, cv2.COLOR_BGR2HSV)
@@ -37,79 +26,85 @@ def foreground_poc(threshold, diff_path, std_dir):
         std_values_g[count] = std_2
         std_values_b[count] = std_3
         count += 1
-    std_values_r[count] = diff1
-    std_values_g[count] = diff2
-    std_values_b[count] = diff3
-    """
-        std1 = cv2.imread(picture_paths[1], cv2.IMREAD_COLOR)
+    mean_r = np.mean(std_values_r, axis=0)
+    mean_g = np.mean(std_values_g, axis=0)
+    mean_b = np.mean(std_values_b, axis=0)
+    std_r = np.std(std_values_b, axis=0)
+    std_g = np.std(std_values_g, axis=0)
+    std_b = np.std(std_values_r, axis=0)
+    cv2.imwrite("std_red.jpg", std_r)
+    cv2.imwrite("std_green.jpg", std_g)
+    cv2.imwrite("std_blue.jpg", std_b)
+    cv2.imwrite("mean_red.jpg", mean_r)
+    cv2.imwrite("mean_green.jpg", mean_g)
+    cv2.imwrite("mean_blue.jpg", mean_b)
+
+
+def foreground_poc(threshold, diff_path, std_dir):
+    [threshold_r, threshold_g, threshold_b] = threshold
+    new_length = 360
+    new_width = 640
+    hsv = True
+    orig = cv2.imread(diff_path, cv2.IMREAD_COLOR)
+    diff = orig
     if hsv:
-        std1 = cv2.cvtColor(std1, cv2.COLOR_BGR2HSV)
-    [std11, std12, std13] = cv2.split(std1)
-    std11 = cv2.resize(std11, (new_width, new_length))
-    std12 = cv2.resize(std12, (new_width, new_length))
-    std13 = cv2.resize(std13, (new_width, new_length))
-    std2 = cv2.imread(picture_paths[2], cv2.IMREAD_COLOR)
-    if hsv:
-        std2 = cv2.cvtColor(std2, cv2.COLOR_BGR2HSV)
-    [std21, std22, std23] = cv2.split(std2)
-    std21 = cv2.resize(std21, (new_width, new_length))
-    std22 = cv2.resize(std22, (new_width, new_length))
-    std23 = cv2.resize(std23, (new_width, new_length))
-    std3 = cv2.imread(picture_paths[3], cv2.IMREAD_COLOR)
-    if hsv:
-        std3 = cv2.cvtColor(std3, cv2.COLOR_BGR2HSV)
-    [std31, std32, std33] = cv2.split(std3)
-    std31 = cv2.resize(std31, (new_width, new_length))
-    std32 = cv2.resize(std32, (new_width, new_length))
-    std33 = cv2.resize(std33, (new_width, new_length))
-    std4 = cv2.imread(picture_paths[4], cv2.IMREAD_COLOR)
-    if hsv:
-        std4 = cv2.cvtColor(std4, cv2.COLOR_BGR2HSV)
-    [std41, std42, std43] = cv2.split(std4)
-    std41 = cv2.resize(std41, (new_width, new_length))
-    std42 = cv2.resize(std42, (new_width, new_length))
-    std43 = cv2.resize(std43, (new_width, new_length))
-    std_values_r[0] = std11
-    std_values_g[0] = std12
-    std_values_b[0] = std13
-    std_values_r[1] = std21
-    std_values_g[1] = std22
-    std_values_b[1] = std23
-    std_values_r[2] = std31
-    std_values_g[2] = std32
-    std_values_b[2] = std33
-    std_values_r[3] = std41
-    std_values_g[3] = std42
-    std_values_b[3] = std43
-    std_values_r[4] = diff1
-    std_values_g[4] = diff2
-    std_values_b[4] = diff3
-    """
-    a_b = np.std(std_values_b, axis=0)
-    a_g = np.std(std_values_g, axis=0)
-    a_r = np.std(std_values_r, axis=0)
-    a_b4 = np.std(std_values_b[0:count], axis=0)
-    a_g4 = np.std(std_values_g[0:count], axis=0)
-    a_r4 = np.std(std_values_r[0:count], axis=0)
-    a = np.sqrt(a_b4**2 + a_g4**2 + a_r4**2)
-    b = np.sqrt(a_b**2 + a_g**2 + a_r**2)
-    for i in range(len(a)):
-        for j in range(len(a[0])):
-            if b[i][j] - a[i][j] > threshold:
-                a[i][j] = 1
+        diff = cv2.cvtColor(orig, cv2.COLOR_BGR2HSV)
+    [diff_r, diff_g, diff_b] = cv2.split(diff)
+    diff_r = cv2.resize(diff_r, (new_width, new_length))
+    diff_g = cv2.resize(diff_g, (new_width, new_length))
+    diff_b = cv2.resize(diff_b, (new_width, new_length))
+    # calc_std(std_dir, hsv)
+    std_r = cv2.imread("std_red.jpg", 0).astype(int)
+    std_g = cv2.imread("std_green.jpg", 0).astype(int)
+    std_b = cv2.imread("std_blue.jpg", 0).astype(int)
+    mean_r = cv2.imread("mean_red.jpg", 0).astype(int)
+    mean_g = cv2.imread("mean_green.jpg", 0).astype(int)
+    mean_b = cv2.imread("mean_blue.jpg", 0).astype(int)
+    # np.where(std_r <= 1, 1, std_r)
+    # np.where(std_g <= 1, 1, std_g)
+    # np.where(std_b <= 1, 1, std_b)
+    std_r[std_r < 1] = 1
+    std_b[std_b < 1] = 1
+    std_g[std_g < 1] = 1
+    distance_r = np.abs((mean_r - diff_r))
+    distance_g = np.abs((mean_g - diff_g))
+    distance_b = np.abs((mean_b - diff_b))
+    #plt.imshow(distance_r.astype(int)), plt.title("R"), plt.colorbar(), plt.show()
+    plt.imshow(distance_g.astype(int)), plt.title("G"), plt.colorbar(), plt.show()
+    plt.imshow(distance_b.astype(int)), plt.title("B"), plt.colorbar(), plt.show()
+    for i in range(len(distance_r)):
+        for j in range(len(distance_r[0])):
+            if distance_r[i][j] >= threshold_r :
+                distance_r[i][j] = 1
             else:
-                a[i][j] = 0
+                distance_r[i][j] = 0
+
+            if distance_b[i][j] >= threshold_b :
+                distance_b[i][j] = 1
+            else:
+                distance_b[i][j] = 0
+
+            if distance_g[i][j] >= threshold_g :
+                distance_g[i][j] = 1
+            else:
+                distance_g[i][j] = 0
+    check_mat = np.zeros(distance_r.shape)
+    for i in range(len(check_mat)):
+        for j in range(len(check_mat[0])):
+            if distance_r[i][j] == 1 and distance_b[i][j] == 1 and distance_g[i][j] == 1:
+                check_mat[i][j] = 1
+            else:
+                check_mat[i][j] = 0
     kernel = np.ones((3, 3), np.uint8)
     plt.imshow(orig), plt.title("Original"), plt.show()
-    # plt.imshow(std1), plt.show()
-    # plt.imshow(a), plt.colorbar(), plt.title(threshold), plt.show()
-    a = cv2.erode(a, kernel, iterations=2)
-    a = cv2.dilate(a, kernel, iterations=4)
-    # plt.imshow(a), plt.colorbar(), plt.title(threshold), plt.show()
-    a = cv2.dilate(a, kernel, iterations=4)
-    a = cv2.erode(a, kernel, iterations=2)
-    # plt.imshow(a), plt.colorbar(), plt.title(threshold), plt.show()
-    return a
+    plt.imshow(check_mat), plt.colorbar(), plt.show()
+    check_mat = cv2.morphologyEx(check_mat, cv2.MORPH_CLOSE, kernel, iterations=1)
+    plt.imshow(check_mat), plt.colorbar(), plt.title("close"), plt.show()
+    kernel = np.ones((3, 3), np.uint8)
+    check_mat = cv2.morphologyEx(check_mat, cv2.MORPH_OPEN, kernel, iterations=5)
+    check_mat = cv2.dilate(check_mat, kernel)
+    plt.imshow(check_mat), plt.colorbar(), plt.title("open"), plt.show()
+    return check_mat
 
 
 """
