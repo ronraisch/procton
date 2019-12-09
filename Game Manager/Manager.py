@@ -1,3 +1,5 @@
+import numpy as np
+
 game_over = False
 we_start = True
 pieces_left = 30
@@ -5,35 +7,41 @@ pixel_to_real_ratio = None
 board_corners = float[4][2]
 mid_width = None
 cell_parameters = float[24][4] #(Xright, Xleft, Yup, Ydown)
+from board detection import BoardDetection
+import vectorHelping
 
-def __init__():
-    board_corners, mid_width = initial_scan()
-    get_board_parameters()
+# WE WORK IN CENTIMETERS!!!
 
+board_length = 49
+board_width = 44
+board_mid_length= 3
+board_side_length = 2
 
 def initial_scan():
     """
     Updates the manager according to the board's properties
-    :return: the board corners(UP-R->DOWN-R->DOWN-L->UP-L), the mid section width
+    :return: Nothing
     """
-    return 14
+    board_corners = BoardDetection()
+    # get_board_parameters()
 
 
 def get_board_parameters():
-    xLength = ((board_corners[0][0] - board_corners[3][0] + board_corners[1][0] - board_corners[2][0])/2 - mid_width)/12
-    yLength = (board_corners[0][1] - board_corners[1][1] + board_corners[3][1] - board_corners[2][1])/4
+    x_full_vector = board_corners[1] - board_corners[0]
+
+    y_full_vector = (board_corners[0][1] - board_corners[1][1] + board_corners[3][1] - board_corners[2][1])/4
     for i in range(24):
         if -1 < i < 6 or 11 < i < 18:
-            cell_parameters[i][0] = board_corners[3][0] + ((i % 12) + 1) * xLength
-            cell_parameters[i][1] = board_corners[3][0] + (i % 12) * xLength
+            cell_parameters[i][0] = board_corners[3][0] + ((i % 12) + 1) * x_full_vector
+            cell_parameters[i][1] = board_corners[3][0] + (i % 12) * x_full_vector
         else:
-            cell_parameters[i][0] = board_corners[0][0] - ((12 - i) % 12 - 1) * xLength
-            cell_parameters[i][1] = board_corners[0][0] - ((12 - i) % 12) * xLength
+            cell_parameters[i][0] = board_corners[0][0] - ((12 - i) % 12 - 1) * x_full_vector
+            cell_parameters[i][1] = board_corners[0][0] - ((12 - i) % 12) * x_full_vector
         if i/12 < 1:
             cell_parameters[i][2] = board_corners[0][1]
-            cell_parameters[i][3] = board_corners[0][1] - yLength
+            cell_parameters[i][3] = board_corners[0][1] - y_full_vector
         else:
-            cell_parameters[i][2] = board_corners[2][1] + yLength
+            cell_parameters[i][2] = board_corners[2][1] + y_full_vector
             cell_parameters[i][3] = board_corners[2][1]
 
 

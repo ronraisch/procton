@@ -40,11 +40,10 @@ def calc_std(std_dir, hsv):
     cv2.imwrite("mean_blue.jpg", mean_b)
 
 
-def foreground_poc(threshold, diff_path, std_dir):
+def foreground_poc(threshold, diff_path, std_dir, hsv):
     [threshold_r, threshold_g, threshold_b] = threshold
     new_length = 360
     new_width = 640
-    hsv = True
     orig = cv2.imread(diff_path, cv2.IMREAD_COLOR)
     diff = orig
     if hsv:
@@ -53,7 +52,7 @@ def foreground_poc(threshold, diff_path, std_dir):
     diff_r = cv2.resize(diff_r, (new_width, new_length))
     diff_g = cv2.resize(diff_g, (new_width, new_length))
     diff_b = cv2.resize(diff_b, (new_width, new_length))
-    # calc_std(std_dir, hsv)
+    calc_std(std_dir, hsv)
     std_r = cv2.imread("std_red.jpg", 0).astype(int)
     std_g = cv2.imread("std_green.jpg", 0).astype(int)
     std_b = cv2.imread("std_blue.jpg", 0).astype(int)
@@ -69,22 +68,22 @@ def foreground_poc(threshold, diff_path, std_dir):
     distance_r = np.abs((mean_r - diff_r))
     distance_g = np.abs((mean_g - diff_g))
     distance_b = np.abs((mean_b - diff_b))
-    #plt.imshow(distance_r.astype(int)), plt.title("R"), plt.colorbar(), plt.show()
+    plt.imshow(distance_r.astype(int)), plt.title("R"), plt.colorbar(), plt.show()
     plt.imshow(distance_g.astype(int)), plt.title("G"), plt.colorbar(), plt.show()
     plt.imshow(distance_b.astype(int)), plt.title("B"), plt.colorbar(), plt.show()
     for i in range(len(distance_r)):
         for j in range(len(distance_r[0])):
-            if distance_r[i][j] >= threshold_r :
+            if distance_r[i][j] >= threshold_r:
                 distance_r[i][j] = 1
             else:
                 distance_r[i][j] = 0
 
-            if distance_b[i][j] >= threshold_b :
+            if distance_b[i][j] >= threshold_b:
                 distance_b[i][j] = 1
             else:
                 distance_b[i][j] = 0
 
-            if distance_g[i][j] >= threshold_g :
+            if distance_g[i][j] >= threshold_g:
                 distance_g[i][j] = 1
             else:
                 distance_g[i][j] = 0
@@ -95,14 +94,12 @@ def foreground_poc(threshold, diff_path, std_dir):
                 check_mat[i][j] = 1
             else:
                 check_mat[i][j] = 0
-    kernel = np.ones((3, 3), np.uint8)
+    kernel = np.ones((9,9), np.uint8)
     plt.imshow(orig), plt.title("Original"), plt.show()
     plt.imshow(check_mat), plt.colorbar(), plt.show()
-    check_mat = cv2.morphologyEx(check_mat, cv2.MORPH_CLOSE, kernel, iterations=1)
+    check_mat = cv2.morphologyEx(check_mat, cv2.MORPH_CLOSE, kernel, iterations=3)
     plt.imshow(check_mat), plt.colorbar(), plt.title("close"), plt.show()
-    kernel = np.ones((3, 3), np.uint8)
     check_mat = cv2.morphologyEx(check_mat, cv2.MORPH_OPEN, kernel, iterations=5)
-    check_mat = cv2.dilate(check_mat, kernel)
     plt.imshow(check_mat), plt.colorbar(), plt.title("open"), plt.show()
     return check_mat
 
