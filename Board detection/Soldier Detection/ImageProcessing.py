@@ -3,8 +3,9 @@ import numpy as np
 import Foreground
 
 DEFAULF = 0
+diff_path = 'new2.jpg'
 
-img = cv2.imread('new2.jpg', cv2.IMREAD_GRAYSCALE)
+img = cv2.imread(diff_path, cv2.IMREAD_GRAYSCALE)
 print(img.shape)
 # img = cv2.medianBlur(img,5)
 img = cv2.resize(img, (640, 360))
@@ -17,8 +18,8 @@ circles = np.uint16(np.around(circles))
 whiteCircles = np.ndarray(shape=circles.shape)
 blackCircles = np.ndarray(shape=circles.shape)
 
-picture_paths = ["new2.jpg", "std1.jpg", "std2.jpg", "std3.jpg", "std4.jpg"]
-foreground = Foreground.foreground_poc(DEFAULF, picture_paths)
+foreground = Foreground.foreground_poc(threshold=DEFAULF,diff_path=diff_path,
+                                       std_dir='C:\\Users\\t8545065\\Desktop\\Lil project\\IBUUUUUD\\stds')
 
 whiteCount = 0
 blackCount = 0

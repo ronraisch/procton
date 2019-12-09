@@ -2,18 +2,20 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import os.path
 
 
-def foreground_poc(threshold, picture_paths):
+def foreground_poc(threshold, diff_path, std_dir):
     if threshold == 0:
         threshold = 10
+    std_file_count = len([name for name in os.listdir(std_dir)])
     new_length = 360
     new_width = 640
     hsv = True
-    std_values_r = np.ndarray((5, new_length, new_width), int)
-    std_values_g = np.ndarray((5, new_length, new_width), int)
-    std_values_b = np.ndarray((5, new_length, new_width), int)
-    orig = cv2.imread(picture_paths[0], cv2.IMREAD_COLOR)
+    std_values_r = np.ndarray((std_file_count + 1, new_length, new_width), int)
+    std_values_g = np.ndarray((std_file_count + 1, new_length, new_width), int)
+    std_values_b = np.ndarray((std_file_count + 1, new_length, new_width), int)
+    orig = cv2.imread(diff_path, cv2.IMREAD_COLOR)
     diff = orig
     if hsv:
         diff = cv2.cvtColor(orig, cv2.COLOR_BGR2HSV)
@@ -21,7 +23,25 @@ def foreground_poc(threshold, picture_paths):
     diff1 = cv2.resize(diff1, (new_width, new_length))
     diff2 = cv2.resize(diff2, (new_width, new_length))
     diff3 = cv2.resize(diff3, (new_width, new_length))
-    std1 = cv2.imread(picture_paths[1], cv2.IMREAD_COLOR)
+    count = 0
+    for file in os.listdir(std_dir):
+        std = cv2.imread(std_dir+'\\'+file, cv2.IMREAD_COLOR)
+        plt.imshow(std)
+        if hsv:
+            std = cv2.cvtColor(std, cv2.COLOR_BGR2HSV)
+        [std_1, std_2, std_3] = cv2.split(std)
+        std_1 = cv2.resize(std_1, (new_width, new_length))
+        std_2 = cv2.resize(std_2, (new_width, new_length))
+        std_3 = cv2.resize(std_3, (new_width, new_length))
+        std_values_r[count] = std_1
+        std_values_g[count] = std_2
+        std_values_b[count] = std_3
+        count += 1
+    std_values_r[count] = diff1
+    std_values_g[count] = diff2
+    std_values_b[count] = diff3
+    """
+        std1 = cv2.imread(picture_paths[1], cv2.IMREAD_COLOR)
     if hsv:
         std1 = cv2.cvtColor(std1, cv2.COLOR_BGR2HSV)
     [std11, std12, std13] = cv2.split(std1)
@@ -64,12 +84,13 @@ def foreground_poc(threshold, picture_paths):
     std_values_r[4] = diff1
     std_values_g[4] = diff2
     std_values_b[4] = diff3
+    """
     a_b = np.std(std_values_b, axis=0)
     a_g = np.std(std_values_g, axis=0)
     a_r = np.std(std_values_r, axis=0)
-    a_b4 = np.std(std_values_b[0:4], axis=0)
-    a_g4 = np.std(std_values_g[0:4], axis=0)
-    a_r4 = np.std(std_values_r[0:4], axis=0)
+    a_b4 = np.std(std_values_b[0:count], axis=0)
+    a_g4 = np.std(std_values_g[0:count], axis=0)
+    a_r4 = np.std(std_values_r[0:count], axis=0)
     a = np.sqrt(a_b4**2 + a_g4**2 + a_r4**2)
     b = np.sqrt(a_b**2 + a_g**2 + a_r**2)
     for i in range(len(a)):
