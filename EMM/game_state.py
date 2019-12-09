@@ -264,6 +264,7 @@ class GameState:
                 return 2 ** (7 - i)
         return 2
 
+
     def get_soldiers_positions(self):
         # returning just the board position part from the state vector
         return self.state[1:GameState.NUMBER_OF_POSITIONS - 1]
