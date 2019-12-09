@@ -107,20 +107,21 @@ class GameState:
         return self.get_possible_states_double(player_turn)
 
     def get_possible_states_not_double(self, player_turn):
-        if not GameState.check_eaten(self.state, player_turn):
-            return self.get_possible_states_wo_eaten(player_turn)
-        else:
-            board = self.state.copy()
-            board[GameState.DICE_RESULT:GameState.DICE_RESULT + 2] = [
-                board[GameState.DICE_RESULT + 1], board[GameState.DICE_RESULT]]
-            other_dices = GameState(board)
-            possible_states = self.get_possible_states_wo_eaten(
-                player_turn) + other_dices.get_possible_states_wo_eaten(player_turn)
-            possible_states = [list(a) for a in possible_states]
-            if list(self.state) in possible_states:
-                possible_states.remove(list(self.state))
-            possible_states = [np.array(x) for x in possible_states]
-            return [self.state] if len(possible_states) == 0 else np.unique(possible_states, axis=0)
+        board = self.state.copy()
+        board[GameState.DICE_RESULT:GameState.DICE_RESULT + 2] = [
+            board[GameState.DICE_RESULT + 1], board[GameState.DICE_RESULT]]
+        other_dices = GameState(board)
+        possible_states = self.get_possible_states_wo_eaten(player_turn)
+        other_states = other_dices.get_possible_states_wo_eaten(player_turn)
+        for state in other_states:
+            state[GameState.DICE_RESULT:GameState.DICE_RESULT + 2] = \
+                [state[GameState.DICE_RESULT+1], board[GameState.DICE_RESULT]]
+        possible_states += other_states
+        possible_states = [list(a) for a in possible_states]
+        if list(self.state) in possible_states:
+            possible_states.remove(list(self.state))
+        possible_states = [np.array(x) for x in possible_states]
+        return [self.state] if len(possible_states) == 0 else list(np.unique(possible_states, axis=0))
 
     def get_possible_states_wo_eaten(self, player_turn):
         possible_states = []
@@ -243,7 +244,7 @@ class GameState:
         for i in range(1, GameState.NUMBER_OF_POSITIONS - 1):
             if self.state[i] * player_turn == 1:
                 total += i * (player_turn + 1) // 2 + (25 - i) * (player_turn - 1) // -2
-        return total
+        return total//2
 
     def get_eaten(self, player_turn):
         # number of killed soldiers
@@ -269,8 +270,5 @@ class GameState:
 
     # Evaluation function for board state
     def evaluate(self, player_turn):
-        return GameState.value_of_houses(self, player_turn) - 7 ** GameState.get_open_houses(self, player_turn)
-        # return np.dot(GameState.SCORE,
-        #               self.state[1:GameState.NUMBER_OF_POSITIONS - 1]) - player_turn * \
-        #        np.max(GameState.SCORE) * self.get_open_houses() + 3 * player_turn * np.max(
-        #     GameState.SCORE) * self.get_eaten()
+        return GameState.value_of_houses(self, player_turn) - 2 ** GameState.get_open_houses(self, player_turn) + \
+               100 ** (GameState.get_eaten(self, -player_turn) - GameState.get_eaten(self, player_turn))
