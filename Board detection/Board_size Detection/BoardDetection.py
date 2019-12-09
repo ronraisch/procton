@@ -2,7 +2,6 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import Foreground_board
-import vectorHelping
 
 def get_corners():
     only_board_path = "C:\\Users\\t8545065\\Desktop\\Lil project\\procton\\Board detection\\Board_size Detection\\board.jpg"
