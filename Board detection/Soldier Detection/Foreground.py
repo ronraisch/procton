@@ -1,87 +1,77 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-import time
-from urllib import request
-import ssl
-from bs4 import BeautifulSoup
+import os
 
-URL = "rtsp://172.29.115.197.4747/video.cgi?.mjpgh264_ulaw.sdp"
-"""
-Psuedo-code:
-    1. take lots of picture (labeled 1-10)
-    2. turn them to tensor
-    3. take another picture
-    4. STDIV it pixel by pixel
-    5. show most dominant differences (threshold)
-"""
 
-def foreground_poc():
-    threshold = 6
-    newLength = 360
-    newWidth = 640
-    HSV = True
-    std_valuesR = np.ndarray((5, newLength, newWidth), int)
-    std_valuesG = np.ndarray((5, newLength, newWidth), int)
-    std_valuesB = np.ndarray((5, newLength, newWidth), int)
-    orig = cv2.imread("new.jpg", cv2.IMREAD_COLOR)
-    if HSV:
+def foreground_poc(threshold, picture_paths):
+    if threshold == 0:
+        threshold = 10
+    new_length = 360
+    new_width = 640
+    hsv = True
+    std_values_r = np.ndarray((5, new_length, new_width), int)
+    std_values_g = np.ndarray((5, new_length, new_width), int)
+    std_values_b = np.ndarray((5, new_length, new_width), int)
+    orig = cv2.imread(picture_paths[0], cv2.IMREAD_COLOR)
+    diff = orig
+    if hsv:
         diff = cv2.cvtColor(orig, cv2.COLOR_BGR2HSV)
     [diff1, diff2, diff3] = cv2.split(diff)
-    diff1 = cv2.resize(diff1, (newWidth, newLength))
-    diff2 = cv2.resize(diff2, (newWidth, newLength))
-    diff3 = cv2.resize(diff3, (newWidth, newLength))
-    std1 = cv2.imread("std1.jpg", cv2.IMREAD_COLOR)
-    if HSV:
+    diff1 = cv2.resize(diff1, (new_width, new_length))
+    diff2 = cv2.resize(diff2, (new_width, new_length))
+    diff3 = cv2.resize(diff3, (new_width, new_length))
+    std1 = cv2.imread(picture_paths[1], cv2.IMREAD_COLOR)
+    if hsv:
         std1 = cv2.cvtColor(std1, cv2.COLOR_BGR2HSV)
     [std11, std12, std13] = cv2.split(std1)
-    std11 = cv2.resize(std11, (newWidth, newLength))
-    std12 = cv2.resize(std12, (newWidth, newLength))
-    std13 = cv2.resize(std13, (newWidth, newLength))
-    std2 = cv2.imread("std2.jpg", cv2.IMREAD_COLOR)
-    if HSV:
+    std11 = cv2.resize(std11, (new_width, new_length))
+    std12 = cv2.resize(std12, (new_width, new_length))
+    std13 = cv2.resize(std13, (new_width, new_length))
+    std2 = cv2.imread(picture_paths[2], cv2.IMREAD_COLOR)
+    if hsv:
         std2 = cv2.cvtColor(std2, cv2.COLOR_BGR2HSV)
     [std21, std22, std23] = cv2.split(std2)
-    std21 = cv2.resize(std21, (newWidth, newLength))
-    std22 = cv2.resize(std22, (newWidth, newLength))
-    std23 = cv2.resize(std23, (newWidth, newLength))
-    std3 = cv2.imread("std3.jpg", cv2.IMREAD_COLOR)
-    if HSV:
+    std21 = cv2.resize(std21, (new_width, new_length))
+    std22 = cv2.resize(std22, (new_width, new_length))
+    std23 = cv2.resize(std23, (new_width, new_length))
+    std3 = cv2.imread(picture_paths[3], cv2.IMREAD_COLOR)
+    if hsv:
         std3 = cv2.cvtColor(std3, cv2.COLOR_BGR2HSV)
     [std31, std32, std33] = cv2.split(std3)
-    std31 = cv2.resize(std31, (newWidth, newLength))
-    std32 = cv2.resize(std32, (newWidth, newLength))
-    std33 = cv2.resize(std33, (newWidth, newLength))
-    std4 = cv2.imread("std4.jpg", cv2.IMREAD_COLOR)
-    if HSV:
+    std31 = cv2.resize(std31, (new_width, new_length))
+    std32 = cv2.resize(std32, (new_width, new_length))
+    std33 = cv2.resize(std33, (new_width, new_length))
+    std4 = cv2.imread(picture_paths[4], cv2.IMREAD_COLOR)
+    if hsv:
         std4 = cv2.cvtColor(std4, cv2.COLOR_BGR2HSV)
     [std41, std42, std43] = cv2.split(std4)
-    std41 = cv2.resize(std41, (newWidth, newLength))
-    std42 = cv2.resize(std42, (newWidth, newLength))
-    std43 = cv2.resize(std43, (newWidth, newLength))
-    std_valuesR[0] = std11
-    std_valuesG[0] = std12
-    std_valuesB[0] = std13
-    std_valuesR[1] = std21
-    std_valuesG[1] = std22
-    std_valuesB[1] = std23
-    std_valuesR[2] = std31
-    std_valuesG[2] = std32
-    std_valuesB[2] = std33
-    std_valuesR[3] = std41
-    std_valuesG[3] = std42
-    std_valuesB[3] = std43
-    std_valuesR[4] = diff1
-    std_valuesG[4] = diff2
-    std_valuesB[4] = diff3
-    aB = np.std(std_valuesB, axis=0)
-    aG = np.std(std_valuesG, axis=0)
-    aR = np.std(std_valuesR, axis=0)
-    aB4 = np.std(std_valuesB[0:4], axis=0)
-    aG4 = np.std(std_valuesG[0:4], axis=0)
-    aR4 = np.std(std_valuesR[0:4], axis=0)
-    a = np.sqrt(aB4**2 + aG4**2 + aR4**2)
-    b = np.sqrt(aB**2 + aG**2 + aR**2)
+    std41 = cv2.resize(std41, (new_width, new_length))
+    std42 = cv2.resize(std42, (new_width, new_length))
+    std43 = cv2.resize(std43, (new_width, new_length))
+    std_values_r[0] = std11
+    std_values_g[0] = std12
+    std_values_b[0] = std13
+    std_values_r[1] = std21
+    std_values_g[1] = std22
+    std_values_b[1] = std23
+    std_values_r[2] = std31
+    std_values_g[2] = std32
+    std_values_b[2] = std33
+    std_values_r[3] = std41
+    std_values_g[3] = std42
+    std_values_b[3] = std43
+    std_values_r[4] = diff1
+    std_values_g[4] = diff2
+    std_values_b[4] = diff3
+    a_b = np.std(std_values_b, axis=0)
+    a_g = np.std(std_values_g, axis=0)
+    a_r = np.std(std_values_r, axis=0)
+    a_b4 = np.std(std_values_b[0:4], axis=0)
+    a_g4 = np.std(std_values_g[0:4], axis=0)
+    a_r4 = np.std(std_values_r[0:4], axis=0)
+    a = np.sqrt(a_b4**2 + a_g4**2 + a_r4**2)
+    b = np.sqrt(a_b**2 + a_g**2 + a_r**2)
     for i in range(len(a)):
         for j in range(len(a[0])):
             if b[i][j] - a[i][j] > threshold:
@@ -89,45 +79,22 @@ def foreground_poc():
             else:
                 a[i][j] = 0
     kernel = np.ones((3, 3), np.uint8)
-    #plt.imshow(orig), plt.colorbar(), plt.title("Original"), plt.show()
-    #plt.imshow(a), plt.colorbar(), plt.title(threshold), plt.show()
-    a = cv2.erode(a, kernel, iterations=1)
-    a = cv2.dilate(a, kernel, iterations=1)
-    #plt.imshow(a), plt.colorbar(), plt.title(threshold), plt.show()
-    a = cv2.dilate(a, kernel, iterations=3)
-    a = cv2.erode(a, kernel, iterations=3)
-    #plt.imshow(a), plt.colorbar(), plt.title(threshold), plt.show()
+    plt.imshow(orig), plt.title("Original"), plt.show()
+    # plt.imshow(std1), plt.show()
+    # plt.imshow(a), plt.colorbar(), plt.title(threshold), plt.show()
+    a = cv2.erode(a, kernel, iterations=2)
+    a = cv2.dilate(a, kernel, iterations=4)
+    # plt.imshow(a), plt.colorbar(), plt.title(threshold), plt.show()
+    a = cv2.dilate(a, kernel, iterations=4)
+    a = cv2.erode(a, kernel, iterations=2)
+    # plt.imshow(a), plt.colorbar(), plt.title(threshold), plt.show()
     return a
 
 
-    """
-    threshold = 50
-    background = cv2.imread("bg.jpg", cv2.IMREAD_GRAYSCALE)
-    diff = cv2.imread("diff.jpg", cv2.IMREAD_GRAYSCALE)
-    diff = cv2.resize(diff, (640, 480))
-    background = cv2.resize(background, (640, 480))
-    kernel = np.ones((5, 5), np.float32) / 25
-    #background = cv2.filter2D(background, -1, kernel)
-    #diff = cv2.filter2D(diff, -1, kernel)
-    #bgdModel = np.zeros((1,65), np.float64)
-    #fgdModel = np.zeros((1, 65), np.float64)
-    #cv2.grabCut(diff, background, (1,1,639,479), bgdModel, fgdModel, 1, cv2.GC_INIT_WITH_RECT)
-    background2 = background
-    plt.imshow(diff), plt.colorbar(), plt.show()
-    for i in range(len(diff)):
-        for j in range(len(diff[0])):
-            if np.abs(int(diff[i][j]) - int(background[i][j])) < threshold:
-                diff[i][j] = 0
-            else:
-                diff[i][j] = 1
-    #background2 = np.where((np.abs(background - diff) > threshold), 1, 0)
-    plt.imshow(diff), plt.colorbar(), plt.show()
-    print("hello")
-    """
-
+"""
 def get_video():
     cap = cv2.VideoCapture(URL)
-    while (True):
+    while True:
         ret, frame = cap.read()
         if frame is not None:
             cv2.imshow('frame', frame)
@@ -135,6 +102,4 @@ def get_video():
         if q == ord("q"):
             break
     cv2.destroyAllWindows()
-
-if __name__ == '__main__':
-    foreground_poc()
+"""
