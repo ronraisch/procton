@@ -63,6 +63,7 @@ def EMM_wo_dices(state_list, depth, alpha, beta, player_turn):
     return max_val, max_state
 
 
+
 # result = EMM(INITIAL_STATE, 1, 1)
 # print(result)
 # GUI_state(result[1])
