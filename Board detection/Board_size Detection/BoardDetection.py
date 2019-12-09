@@ -1,7 +1,8 @@
 import cv2
-import Foreground
 import matplotlib.pyplot as plt
 import numpy as np
+import Foreground
+
 
 picture_paths = ["board.jpg", "empty1.jpg", "empty2.jpg", "empty3.jpg", "empty4.jpg"]
 foreground = Foreground.foreground_poc(26, picture_paths)
