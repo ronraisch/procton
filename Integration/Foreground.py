@@ -15,7 +15,7 @@ def calc_std(std_dir, hsv):
     count = 0
     for file in os.listdir(std_dir):
         std = cv2.imread(std_dir + '\\' + file, cv2.IMREAD_COLOR)
-        plt.imshow(std)
+        # plt.imshow(std)
         if hsv:
             std = cv2.cvtColor(std, cv2.COLOR_BGR2HSV)
         [std_1, std_2, std_3] = cv2.split(std)
@@ -70,8 +70,8 @@ def foreground_poc(threshold, diff_path, std_dir):
     distance_g = np.abs((mean_g - diff_g))
     distance_b = np.abs((mean_b - diff_b))
     #plt.imshow(distance_r.astype(int)), plt.title("R"), plt.colorbar(), plt.show()
-    plt.imshow(distance_g.astype(int)), plt.title("G"), plt.colorbar(), plt.show()
-    plt.imshow(distance_b.astype(int)), plt.title("B"), plt.colorbar(), plt.show()
+    # plt.imshow(distance_g.astype(int)), plt.title("G"), plt.colorbar(), plt.show()
+    # plt.imshow(distance_b.astype(int)), plt.title("B"), plt.colorbar(), plt.show()
     for i in range(len(distance_r)):
         for j in range(len(distance_r[0])):
             if distance_r[i][j] >= threshold_r :
@@ -96,14 +96,14 @@ def foreground_poc(threshold, diff_path, std_dir):
             else:
                 check_mat[i][j] = 0
     kernel = np.ones((3, 3), np.uint8)
-    plt.imshow(orig), plt.title("Original"), plt.show()
-    plt.imshow(check_mat), plt.colorbar(), plt.show()
+    # plt.imshow(orig), plt.title("Original"), plt.show()
+    # plt.imshow(check_mat), plt.colorbar(), plt.show()
     check_mat = cv2.morphologyEx(check_mat, cv2.MORPH_CLOSE, kernel, iterations=1)
-    plt.imshow(check_mat), plt.colorbar(), plt.title("close"), plt.show()
+    # plt.imshow(check_mat), plt.colorbar(), plt.title("close"), plt.show()
     kernel = np.ones((3, 3), np.uint8)
     check_mat = cv2.morphologyEx(check_mat, cv2.MORPH_OPEN, kernel, iterations=5)
     check_mat = cv2.dilate(check_mat, kernel)
-    plt.imshow(check_mat), plt.colorbar(), plt.title("open"), plt.show()
+    # plt.imshow(check_mat), plt.colorbar(), plt.title("open"), plt.show()
     return check_mat
 
 

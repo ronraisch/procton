@@ -4,12 +4,11 @@ import Foreground
 
 def get_detected_soldiers(filename):
     DEFAULF = 0
-    std_dir = "C:\\Users\\t8709339\\Desktop\\talpiot\\procton\\Board detection\\Soldier Detection\\stds"
+    std_dir = "C:\\Users\\t8545065\\Desktop\\Lil project\\procton\\Integration\\stds"
     threshold_r = 0
     threshold_g = 6
     threshold_b = 6
     img = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
-    print(img.shape)
     # img = cv2.medianBlur(img,5)
     img = cv2.resize(img, (640, 360))
     cimg = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
@@ -27,7 +26,7 @@ def get_detected_soldiers(filename):
     whiteCount = 0
     blackCount = 0
     for i in circles[0, :]:
-        print(i)
+        # print(i)
         if foreground[i[1]][i[0]] == 1:
             if img[i[1]][i[0]] > 100:
                 whiteCircles[0][whiteCount] = i
@@ -40,8 +39,11 @@ def get_detected_soldiers(filename):
             cv2.circle(cimg, (i[0], i[1]), 2, (0, 0, 255), 3)
 
 
-    cv2.imshow('detected circles', cimg)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # cv2.imshow('detected circles', cimg)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+    return [whiteCircles, blackCircles]
 
-get_detected_soldiers("C:\\Users\\t8709339\\Desktop\\talpiot\\procton\\Board detection\\Soldier Detection\\test_photos\WIN_20191209_17_01_19_Pro.jpg")
+get_detected_soldiers("C:\\Users\\t8545065\\Desktop\\Lil project\\procton\\Board detection\\Soldier Detection"
+                      "\\test_photos\\WIN_20191209_17_00_11_Pro.jpg")
+

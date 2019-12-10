@@ -79,6 +79,7 @@ def get_turn(board, player_playing):
     # board = INITIAL_STATE
     # p = 1
     # print(board)
+    print("board", board)
     GUI_state(board)
     result = EMM(board, 1, player_playing)
     return result[1]
