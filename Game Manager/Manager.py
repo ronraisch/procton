@@ -138,21 +138,52 @@ def translate_point_to_board(point):
     point[0], point[1] = point[0]*np.cos(theta) - point[1]*np.sin(theta), point[0]*np.sin(theta) + point[1]*np.cos(theta)
     return point
 
-def translate_locations_to_board(location_vector):
+def translate_locations_to_board(white_coordinates, black_coordinates, dice_roll):
     """
-    translates from picture coordinates to backgammon-board vector
-    :param location_vector: the pieces locations
-    :return: a vector describing the current board
+       translates from picture coordinates to backgammon-board vector
+       :param location_vector: the pieces locations
+       :return: a vector describing the current board
     """
+    board_vector = np.array(30)
+    board_vector[28] = dice_roll[0]
+    board_vector[29] = dice_roll[1]
+    board_vector[0] = 0  # winners white
+    board_vector[25] = 0  # winners black
+    board_vector[26] = 0  # eaten white
+    board_vector[27] = 0  # eaten black
+    for i in range(len(white_coordinates)):
+        if white_coordinates[i] is None:
+            break
+        translated_coordinates = translate_point_to_board(white_coordinates[i])
+        for j in range(24):
+            if is_between_4_corners(cell_parameters[j],translated_coordinates):
+                if board_vector[24-j] < -1:
+                    print("Black and white in place "+ str(24-j))
+                    return
+                board_vector[24-j] += 1
+                break
+        print("Didnt find place for a piece")
+        return
+    for i in range(len(black_coordinates)):
+        if black_coordinates[i] is None:
+            break
+        translated_coordinates = translate_point_to_board(black_coordinates[i])
+        for j in range(24):
+            if is_between_4_corners(cell_parameters[j], translated_coordinates):
+                if board_vector[24-j] > 1:
+                    print("Black and white in place "+ str(24-j))
+                    return
+                board_vector[24 - j] -= 1
+                break
+        print("Didnt find place for a black piece")
+        return
+    return board_vector
 
-    return 5
 
-
-def get_move(board_state, dice_roll):
+def get_move(board_state):
     """
     gets our next move from the algorithm
     :param board_state: the board-vector
-    :param dice_roll: the dice roll
     :return: the decided move
     """
     return 6
@@ -198,13 +229,13 @@ def our_turn():
     Doing our turn
     :return:
     """
-    roll_dice()
-    location_vector, dice_roll = get_locations()
-    found_error = check_locations(location_vector)
-    while found_error:  # and handle problems
-        found_error = check_locations(location_vector)
-    board_state = translate_locations_to_board(location_vector)
-    move = get_move(board_state, dice_roll)
+    dice_roll = roll_dice()
+    white_location_vector, black_location_vector,  dice_roll = get_locations(dice_roll)
+    # found_error = check_locations(location_vector)
+    # while found_error:  # and handle problems
+    #     found_error = check_locations(location_vector)
+    board_state = translate_locations_to_board(white_location_vector, black_location_vector, dice_roll)
+    move = get_move(board_state)
     command = translate_move_to_xy(move)
     do_turn(command)
     location_vector = get_locations()
