@@ -72,15 +72,15 @@ def EMM_wo_dices(state_list, depth, alpha, beta, player_turn):
 # print(my_state.evaluate())
 # GUI_state(INITIAL_STATE)
 import time
-np.random.seed(69)
-board = INITIAL_STATE
-p = 1
-for i in range(25):
-    # print(board)
-    GUI_state(board)
-    result = EMM(board, 1, p)
-    board = result[1]
-    set_dices(board)
-    p *= -1
+# np.random.seed(69)
+# board = INITIAL_STATE
+# p = 1
+# for i in range(25):
+#     # print(board)
+#     GUI_state(board)
+#     result = EMM(board, 1, p)
+#     board = result[1]
+#     set_dices(board)
+#     p *= -1
 
 

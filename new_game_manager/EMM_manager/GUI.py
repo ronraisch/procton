@@ -19,7 +19,7 @@ def GUI_state(l):
     x = np.arange(0, 1 + 1.0 / SOLDIERS_IN_ROW, 1.0 / SOLDIERS_IN_ROW)
     ax = plt.gca()
     ax.set_facecolor('xkcd:brown')
-    for pos in x[1:]:
+    for pos in x:
         plt.plot(np.ones_like(x) * pos - 1.0 / NUM_OF_POSITIONS,
                  (x - 1.0 / 2 / NUM_OF_POSITIONS) * 1.05, 'r')
     # print(l)
