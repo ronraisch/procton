@@ -25,7 +25,7 @@ class GameState:
         self.state = l
 
     def game_over(self):
-        return self.state[GameState.NUMBER_OF_SOLDIERS - 1] == GameState.NUMBER_OF_SOLDIERS or \
+        return self.state[GameState.NUMBER_OF_POSITIONS - 1] == GameState.NUMBER_OF_SOLDIERS or \
                self.state[0] == GameState.NUMBER_OF_SOLDIERS
 
     @staticmethod
@@ -35,21 +35,22 @@ class GameState:
 
     @staticmethod
     def check_endgame(state, player_turn):
-        dummie = (GameState.NUMBER_OF_POSITIONS - GameState.HOME_SIZE - 2) // 2
-        first_index = int(dummie * (player_turn + 1) + 1)
-        sum = state[(GameState.NUMBER_OF_POSITIONS - 1) * (
-                player_turn + 1) // 2]
-        for i in range(first_index, first_index + GameState.HOME_SIZE):
+        home_index = (GameState.NUMBER_OF_POSITIONS - 1) * (player_turn + 1) // 2
+        # first_index = int(dummie * (player_turn + 1) + 1)
+        sum = 0
+        sum += state[home_index]
+        for i in range(home_index - player_turn, home_index - player_turn - player_turn * GameState.HOME_SIZE,
+                       -player_turn):
             if state[i] * player_turn > 0:
                 sum += state[i]
         return abs(sum) == GameState.NUMBER_OF_SOLDIERS
 
     @staticmethod
     def find_highest_position(state, player_turn):
-        index = (GameState.NUMBER_OF_POSITIONS - 1) * (player_turn + 1) // 2
-        highest_position = index - player_turn
-        for i in range(index, index - player_turn * GameState.HOME_SIZE, -player_turn):
-            if state[i] * player_turn > 1:
+        home_index = (GameState.NUMBER_OF_POSITIONS - 1) * (player_turn + 1) // 2
+        highest_position = home_index - player_turn
+        for i in range(highest_position, highest_position - player_turn * GameState.HOME_SIZE, -player_turn):
+            if state[i] * player_turn >= 1:
                 highest_position = i
         return highest_position
 
@@ -62,7 +63,7 @@ class GameState:
         # 6->6
         normalized_hp = (GameState.NUMBER_OF_POSITIONS - 1 - highest_position) * (
                 player_turn + 1) / 2 - highest_position * (player_turn - 1) / 2
-        if state[GameState.DICE_RESULT] > normalized_hp and state[GameState.DICE_RESULT + 1] > normalized_hp:
+        if state[GameState.DICE_RESULT] >= normalized_hp and state[GameState.DICE_RESULT + 1] >= normalized_hp:
             return True and GameState.check_endgame(state, player_turn)
         return False
 
@@ -168,10 +169,6 @@ class GameState:
         if state[src] * player_turn <= 0:
             return False
 
-        # if state[move[1]] is available
-        if state[dest] * player_turn < -1:
-            return False
-
         # trying to remove soldiers before endgame
         if dest == (GameState.NUMBER_OF_POSITIONS - 1) * (
                 player_turn + 1) / 2 and not GameState.check_endgame(state, player_turn):
@@ -183,10 +180,13 @@ class GameState:
                 return False
             if src != GameState.find_highest_position(state, player_turn):
                 return False
-            move[1] = (GameState.NUMBER_OF_POSITIONS - 1) * (player_turn + 1) / 2
+            move[1] = (GameState.NUMBER_OF_POSITIONS - 1) * (player_turn + 1) // 2
+            dest = move[1]
+        # if state[move[1]] is available
+        if state[dest] * player_turn < -1:
+            return False
 
         return True
-
 
     @staticmethod
     def make_move_on_state(moves, state, player_turn):

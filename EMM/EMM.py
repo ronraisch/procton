@@ -73,13 +73,17 @@ import time
 
 np.random.seed(73)
 board = INITIAL_STATE
+state = GameState(board)
 p = 1
 
 
-for i in range(75):
+while not state.game_over():
     # print(board)
     GUI_state(board)
     result = EMM(board, 1, p)
     board = result[1]
     set_dices(board)
+    state = GameState(board)
     p *= -1
+
+GUI_state(board)
