@@ -32,7 +32,7 @@ def get_xy_from_triangle_number(num_triangle, triangle_stack, curr_radius):
                        + (25 - num_triangle) * (25 > num_triangle > 12)
     x = a/2 + a*(tmp_num_triangle - 1) + delta * (tmp_num_triangle > 6)
     y_diff = sum([triangle_stack[i][2] for i in range(len(triangle_stack))])*2 + curr_radius
-    y = height* (num_triangle < 12) + y_diff * (-1)**(num_triangle < 12) # from the upper part
+    y = height* (num_triangle < 13) + y_diff * (-1)**(num_triangle < 13) # from the upper part
     # or from the bottom part
     return [x,y]
 
@@ -81,9 +81,10 @@ def get_move_from_state(curr_state, new_state, player_turn):
     diff = new_state - curr_state
     moves = []
     while np.sum(np.abs(diff)) > 0:
-        moved = np.where(diff <= -player_turn)
-        captured = np.where(diff >= player_turn)
-        moves.append([int(moved[0] - 1), int(captured[0] - 1)])
+        moved = np.where(diff <= -player_turn)[0]
+        captured = np.where(diff >= player_turn)[0]
+        print (moved, captured)
+        moves.append([int(moved[0] - 1), int(captured[0]- 1)])
         diff[moved[0]] += player_turn
         diff[captured[0]] -= player_turn
     return moves
@@ -115,7 +116,7 @@ while True:
     GUI.GUI_state(board)
     cv2.waitKey(0)
     move = get_move_from_state(game_board, board, player_turn)
-    print ("HELOOOO")
+    print (move, "move")
     for action in move:
         print(action)
         piece_to_move = stack_board[action[0]].pop()
@@ -126,7 +127,7 @@ while True:
                                                     piece_to_move[2])
         stack_board[action[1]].append(piece_to_move)
         cv2.circle(result_img, (int(piece_to_move[0]), int(piece_to_move[1])), int(piece_to_move[2]), (0, 255, 0), 2)
-        cv2.circle(result_img, (int(xy_to_move_to[0]), int(xy_to_move_to[1])), int(piece_to_move[2]), (0, 255, 0),
+        cv2.circle(result_img, (int(xy_to_move_to[0]), int(xy_to_move_to[1])), int(piece_to_move[2]), (255, 0, 0),
                    2)
         print (xy_to_move_to)
     cv2.imshow("result", result_img)
