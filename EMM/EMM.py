@@ -5,11 +5,10 @@ from GUI import *
 
 def set_dices(state):
     r = np.random.randint(1, 7, 2)
-    x=[]
-    if type(state)==type(x):
-        state=np.array(state)
+    x = []
+    if type(state) == type(x):
+        state = np.array(state)
     state[GameState.DICE_RESULT:GameState.DICE_RESULT + 2] = r
-
 
 
 def get_prob(state):
@@ -51,7 +50,7 @@ def EMM_wo_dices(state_list, depth, alpha, beta, player_turn):
             for board in state_dice.get_possible_states(player_turn):
                 tmp = GameState(board)
                 val, dummie = EMM_wo_dices(tmp.state, depth - 1, alpha, beta, -player_turn)
-                val *= -player_turn*get_prob(tmp.state)
+                val *= -player_turn * get_prob(tmp.state)
                 if max_val < val:
                     max_val = val
                     max_state = tmp.state.copy()
@@ -63,7 +62,6 @@ def EMM_wo_dices(state_list, depth, alpha, beta, player_turn):
     return max_val, max_state
 
 
-
 # result = EMM(INITIAL_STATE, 1, 1)
 # print(result)
 # GUI_state(result[1])
@@ -72,15 +70,20 @@ def EMM_wo_dices(state_list, depth, alpha, beta, player_turn):
 # print(my_state.evaluate())
 # GUI_state(INITIAL_STATE)
 import time
-np.random.seed(69)
+
+np.random.seed(73)
 board = INITIAL_STATE
+state = GameState(board)
 p = 1
-for i in range(25):
+
+
+while not state.game_over():
     # print(board)
     GUI_state(board)
     result = EMM(board, 1, p)
     board = result[1]
     set_dices(board)
+    state = GameState(board)
     p *= -1
 
-
+GUI_state(board)
