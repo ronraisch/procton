@@ -69,10 +69,8 @@ def four_point_transform(image, pts):
 
 filename = 'C:\\Users\\t8709339\\Desktop\\talpiot\\procton\\Board detection\\board_reshape\\test.jpeg'
 img = cv2.imread(filename, cv2.IMREAD_COLOR)
-img=four_point_transform(img,np.array([[165,360],[581,364],[674,685],[55,687]]))
-cv2.imshow('dst',img)
-if cv2.waitKey(0) & 0xff == 27:
-    cv2.destroyAllWindows()
-# gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-#
-# gray = np.float32(gray)
+img=four_point_transform(img,np.array([[182,388],[564,390],[99,669],[634,670]]))
+cv2.imshow('detected circles', img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
