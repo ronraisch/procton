@@ -7,8 +7,8 @@ INITIAL_STATE = np.array(
     [0, 2.0, 0, 0, 0, 0, -5.0, 0, -3.0, 0, 0, 0, 5.0, -5.0, 0, 0, 0, 3.0, 0, 5.0, 0, 0, 0, 0, -2.0,
      0, 0, 0, 6, 1])
 test_state = np.array(
-    [0, 0, 0, 0, 0, 0, -6.0, 0, -3.0, 0, 0, 0, 0, -5.0, 0, 0, 0, 0, 0, 5.0, 5.0, 5.0, 0, 0, -1.0,
-     0, 0, 0, 5, 3])
+    [13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 2, 0, -1.0,
+     10, 0, 0, 5, 6])
 SOLDIERS_IN_ROW = 12
 SOLDIERS_IN_COL = 9
 SOLDIER_SIZE = 50
@@ -29,7 +29,7 @@ def GUI_state(l):
              s=str(int(l[GameState.DICE_RESULT])) + "   " + str(int(l[GameState.DICE_RESULT + 1])),
              fontsize=20)
     plt.text(x_rect-0.02, 1-y_rect / 2,
-             s="W"+str(int(l[GameState.NUMBER_OF_POSITIONS-1])) + " " + "B"+str(int(l[0])),
+             s="W"+str(int(l[GameState.NUMBER_OF_POSITIONS-1])) + " " + "B"+str(int(abs(l[0]))),
              fontsize=17)
     rect_width = 0.1
     rect_height = 1 - y_rect * 2

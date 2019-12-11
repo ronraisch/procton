@@ -46,8 +46,7 @@ class GameState:
 
     @staticmethod
     def find_highest_position(state, player_turn):
-        index = state[(GameState.NUMBER_OF_POSITIONS - 1) * (
-                player_turn + 1) / 2]
+        index = (GameState.NUMBER_OF_POSITIONS - 1) * (player_turn + 1) // 2
         highest_position = index - player_turn
         for i in range(index, index - player_turn * GameState.HOME_SIZE, -player_turn):
             if state[i] * player_turn > 1:
@@ -63,9 +62,7 @@ class GameState:
         # 6->6
         normalized_hp = (GameState.NUMBER_OF_POSITIONS - 1 - highest_position) * (
                 player_turn + 1) / 2 - highest_position * (player_turn - 1) / 2
-        if state[GameState.DICE_RESULT] > normalized_hp and state[
-            GameState.DICE_RESULT + 1] > normalized_hp:
-            print(normalized_hp)
+        if state[GameState.DICE_RESULT] > normalized_hp and state[GameState.DICE_RESULT + 1] > normalized_hp:
             return True and GameState.check_endgame(state, player_turn)
         return False
 
@@ -73,32 +70,26 @@ class GameState:
     def check_eaten(state, player_turn):
         return state[GameState.KILLED_SOLDIERS_INDEX + (-player_turn + 1) // 2] > 0
 
-    def get_move_iterator(self, player_turn, dice_val):
+    def get_move_iterator(self, player_turn, dice_result):
         moves = []
         # 1->24
         # ....6->19 for player_turn=1
         # dice->dice for player_turn=-1
-        dice_white = GameState.NUMBER_OF_POSITIONS - 1 - dice_val
-        dice_pos = int((1 + player_turn) / 2 * dice_val + (1 - player_turn) / 2 * dice_white)
+        dice_pos = []
+        for dice_val in dice_result:
+            dice_white = GameState.NUMBER_OF_POSITIONS - 1 - dice_val
+            dice_pos.append(int((1 + player_turn) / 2 * dice_val + (1 - player_turn) / 2 * dice_white))
+
+        # has eaten checkers
         if GameState.check_eaten(self.state, player_turn):
-            return [[dice_pos, GameState.KILLED_SOLDIER]]
-        if GameState.check_endgame(self.state, player_turn):
-            if self.state[dice_pos] * player_turn > 0:
-                moves.append(
-                    [dice_pos, (GameState.NUMBER_OF_POSITIONS - 1) * (1 + player_turn) / 2])
-            first_index = int((1 - player_turn) / 2 + (1 + player_turn) / 2 * (
-                    GameState.NUMBER_OF_POSITIONS - 2))
-            for i in range(first_index, first_index - player_turn * GameState.HOME_SIZE,
-                           -player_turn):
-                if GameState.NUMBER_OF_POSITIONS - 1 > i - dice_val * player_turn > 0 and \
-                        self.state[i] * player_turn > 0:
-                    moves.append([i, i - dice_val * player_turn])
-            if len(moves) == 0:
-                moves.append([GameState.find_highest_position(self.state, player_turn),
-                              (GameState.NUMBER_OF_POSITIONS - 1) * (1 + player_turn) / 2])
+            for i in range(len(dice_result)):
+                moves.append(([dice_pos[i], GameState.KILLED_SOLDIER], dice_result[i]))
+
+        # regular mode
         else:
-            for i in range(GameState.NUMBER_OF_POSITIONS):
-                moves.append([i, i + dice_val * player_turn])
+            for i in range(1, GameState.NUMBER_OF_POSITIONS - 1):
+                for dice_val in dice_result:
+                    moves.append(([i, i + dice_val * player_turn], dice_val))
         return moves
 
     def get_possible_states(self, player_turn):
@@ -107,50 +98,34 @@ class GameState:
         return self.get_possible_states_double(player_turn)
 
     def get_possible_states_not_double(self, player_turn):
-        board = self.state.copy()
-        board[GameState.DICE_RESULT:GameState.DICE_RESULT + 2] = [
-            board[GameState.DICE_RESULT + 1], board[GameState.DICE_RESULT]]
-        other_dices = GameState(board)
-        possible_states = self.get_possible_states_wo_eaten(player_turn)
-        other_states = other_dices.get_possible_states_wo_eaten(player_turn)
-        for state in other_states:
-            state[GameState.DICE_RESULT:GameState.DICE_RESULT + 2] = \
-                [state[GameState.DICE_RESULT+1], board[GameState.DICE_RESULT]]
-        possible_states += other_states
-        possible_states = [list(a) for a in possible_states]
-        if list(self.state) in possible_states:
-            possible_states.remove(list(self.state))
-        possible_states = [np.array(x) for x in possible_states]
-        return [self.state] if len(possible_states) == 0 else list(np.unique(possible_states, axis=0))
-
-    def get_possible_states_wo_eaten(self, player_turn):
         possible_states = []
-        dice_result = self.state[GameState.DICE_RESULT:GameState.DICE_RESULT + 2]
-        moves1 = self.get_move_iterator(player_turn, dice_result[0])
-        counter = 0
+        one_dice_states = []
+        dice_result = list(self.state[GameState.DICE_RESULT:GameState.DICE_RESULT + 2])
+        moves1 = self.get_move_iterator(player_turn, dice_result)
         for move1 in moves1:
-            eval_state1 = None
-            if GameState.is_legal_move(self.state, move1, player_turn):
-                eval_state1 = GameState.make_move_on_state([move1], self.state, player_turn)
+            if GameState.is_legal_move(self.state, move1[0], player_turn):
+
+                eval_state1 = GameState.make_move_on_state([move1[0]], self.state, player_turn)
+                eval_game_state = GameState(eval_state1)
             else:
-                counter += 1
-                if counter < len(moves1):
-                    continue
-            if eval_state1 is not None:
-                tmp = GameState(eval_state1)
-            else:
-                tmp = GameState(self.state.copy())
-            moves2 = tmp.get_move_iterator(player_turn, dice_result[1])
+                continue
+            current_dice = list(dice_result)
+            current_dice.remove(move1[1])
+            moves2 = eval_game_state.get_move_iterator(player_turn, current_dice)
             states = []
             for move in moves2:
-                if GameState.is_legal_move(tmp.state, move, player_turn):
-                    eval_state2 = GameState.make_move_on_state([move], tmp.state, player_turn)
+                if GameState.is_legal_move(eval_state1, move[0], player_turn):
+                    eval_state2 = GameState.make_move_on_state([move[0]], eval_state1, player_turn)
                     states.append(eval_state2)
             if len(states) == 0:
-                possible_states.append(tmp.state)
+                one_dice_states.append(eval_state1)
             else:
                 possible_states += states
-        return possible_states
+        if len(possible_states) == 0:
+            possible_states += one_dice_states
+        if len(possible_states) == 0:
+            possible_states.append(self.state)
+        return list(np.unique(possible_states, axis=0))
 
     def get_possible_states_double(self, player_turn):
         possible_states = self.get_possible_states_not_double(player_turn)
@@ -187,30 +162,31 @@ class GameState:
         if GameState.check_eaten(state, player_turn):
             return GameState.is_legal_move_eaten(state, move, player_turn)
 
-        move = [int(move[0]), int(move[1])]
+        src = int(move[0])
+        dest = int(move[1])
         # if move[0] is in the same color of the player.
-        if state[move[0]] * player_turn <= 0:
+        if state[src] * player_turn <= 0:
             return False
-
-        dice_result = state[GameState.DICE_RESULT:GameState.DICE_RESULT + 2]
-
-        # if move corresponds to dice results
-        # TODO: check if condition necessary (for optimization)
-        if (move[1] - move[0]) * player_turn not in dice_result:
-            return False
-        # if move in the board
-        if move[1] > GameState.NUMBER_OF_POSITIONS - 2 or move[1] < 1:
-            return False
-            # return GameState.check_endendgame(state, player_turn) and GameState.end_game_mode()
 
         # if state[move[1]] is available
-        if state[move[1]] * player_turn < -1:
+        if state[dest] * player_turn < -1:
             return False
+
         # trying to remove soldiers before endgame
-        if move[1] == (GameState.NUMBER_OF_POSITIONS - 1) * (
+        if dest == (GameState.NUMBER_OF_POSITIONS - 1) * (
                 player_turn + 1) / 2 and not GameState.check_endgame(state, player_turn):
             return False
+
+        # if move in the board
+        if dest > GameState.NUMBER_OF_POSITIONS - 1 or dest < 0:
+            if not GameState.check_endendgame(state, player_turn):
+                return False
+            if src != GameState.find_highest_position(state, player_turn):
+                return False
+            move[1] = (GameState.NUMBER_OF_POSITIONS - 1) * (player_turn + 1) / 2
+
         return True
+
 
     @staticmethod
     def make_move_on_state(moves, state, player_turn):
@@ -244,7 +220,7 @@ class GameState:
         for i in range(1, GameState.NUMBER_OF_POSITIONS - 1):
             if self.state[i] * player_turn == 1:
                 total += i * (player_turn + 1) // 2 + (25 - i) * (player_turn - 1) // -2
-        return total//2
+        return total
 
     def get_eaten(self, player_turn):
         # number of killed soldiers
@@ -261,9 +237,9 @@ class GameState:
     def value_of_house(size):
         for i in range(2, 6):
             if size == i:
-                return 2 ** (7 - i)
-        return 2
+                return (13 / np.pi) * (np.arctan(2.5 - 0.75 * i) + np.pi / 2)
 
+        return (13 / np.pi) * (np.arctan(2.5 - 0.75 * 6) + np.pi / 2)
 
     def get_soldiers_positions(self):
         # returning just the board position part from the state vector
@@ -271,5 +247,5 @@ class GameState:
 
     # Evaluation function for board state
     def evaluate(self, player_turn):
-        return GameState.value_of_houses(self, player_turn) - 2 ** GameState.get_open_houses(self, player_turn) + \
+        return GameState.value_of_houses(self, player_turn) - 1.7 ** GameState.get_open_houses(self, player_turn) + \
                100 ** (GameState.get_eaten(self, -player_turn) - GameState.get_eaten(self, player_turn))
