@@ -94,6 +94,7 @@ for contour in contours:
         contour_circles.append(np.array([x, y, radius]))
         # cv2.circle(img, (int(x), int(y)), int(radius), color=(0, 255, 0), thickness=2)
 
+
 dist_threshold = 20
 confirmed_circles = []
 for contour_circle in contour_circles:
