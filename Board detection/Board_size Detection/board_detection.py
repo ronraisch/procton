@@ -17,39 +17,60 @@ tmp = cv2.resize(img, (1140, 640))
 cv2.imshow('Original Image', tmp)
 cv2.waitKey(0)
 
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+edges = cv2.Canny(gray, 800, 1000, apertureSize=5)
+edges = cv2.morphologyEx(edges, kernel=None, op=cv2.MORPH_CLOSE, iterations=2)
 
-corners = cv2.goodFeaturesToTrack(gray,25,0.001,10)
-corners = np.int0(corners)
+# lines=cv2.HoughLines(edges, 1, np.pi / 180, 10)
+#
+# for rho,theta in lines[0]:
+#     a = np.cos(theta)
+#     b = np.sin(theta)
+#     x0 = a*rho
+#     y0 = b*rho
+#     x1 = int(x0 + 1000*(-b))
+#     y1 = int(y0 + 1000*(a))
+#     x2 = int(x0 - 1000*(-b))
+#     y2 = int(y0 - 1000*(a))
+#
+#     cv2.line(edges,(x1,y1),(x2,y2),(255,255,255),2)
 
-for i in corners:
-    x,y = i.ravel()
-    cv2.circle(img,(x,y),3,255,-1)
-
-tmp = cv2.resize(img, (1140, 640))
-cv2.imshow('output Image', tmp)
+tmp = cv2.resize(edges, (1140, 640))
+cv2.imshow('edges Image', tmp)
 cv2.waitKey(0)
 
-#
-# gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-#
-# # gray = gray.astype(np.float)
-# # tmp = cv2.resize(gray, (1140, 640))
-# # cv2.imshow('gray Image', tmp)
-# # cv2.waitKey(0)
-# dst = cv2.goodFeaturesToTrack(gray,maxCorners=6,qualityLevel=3,minDistance=700)
-# tmp = cv2.resize(dst, (1140, 640))
-# cv2.imshow('corner Image', tmp)
-# cv2.waitKey(0)
-#
-# #result is dilated for marking the corners, not important
-# dst = cv2.dilate(src=dst,kernel=None)
-#
-# # Threshold for an optimal value, it may vary depending on the image.
-# img[dst>0.01*dst.max()]=[0,0,255]
-# tmp = cv2.resize(img, (1140, 640))
-#
-# cv2.imshow('dst',tmp)
-# if cv2.waitKey(0) & 0xff == 27:
-#     cv2.destroyAllWindows()
+contours, hierarchy = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+tmp = img.copy()
+cv2.drawContours(tmp, contours, -1, (0, 255, 0), 2)
+tmp = cv2.resize(tmp, (1140, 640))
+cv2.imshow('Contour Image', tmp)
+cv2.waitKey(0)
+
+contours_list = []
+
+for contour in contours:
+    epsilon = 0.1 * cv2.arcLength(contour, True)
+    approx = cv2.approxPolyDP(contour, epsilon, True)
+    area = cv2.contourArea(contour)
+    if len(approx) < 12 and area > img.shape[0] * img.shape[1] * 0.1:
+        contours_list.append(contour)
+
+biggest_contour = None
+biggest_area = 0
+for contour in contours_list:
+    area = cv2.contourArea(contour)
+    if area > biggest_area:
+        biggest_area = area
+        biggest_contour = contour
+
+cv2.drawContours(img, [biggest_contour], -1, (120, 255, 31), 2)
+rect = cv2.minAreaRect(biggest_contour)
+box = cv2.boxPoints(rect)
+box = np.int0(box)
+cv2.drawContours(img, [box], 0, (0, 0, 255), 2)
+
+tmp = cv2.resize(img, (1140, 640))
+cv2.imshow('Output Image', tmp)
+cv2.waitKey(0)
