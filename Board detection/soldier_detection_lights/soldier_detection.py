@@ -163,6 +163,57 @@ def main():
     show_img(img, "detected soldiers Image")
 
 
+def get_result():
+    img = take_picture()
+
+    # hsv is the conversion of RGB to HSV
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+    lower_black = np.array([70, 0, 0])
+    upper_black = np.array([150, 160, 100])
+    black_mask = mask_range(hsv, lower_black, upper_black)
+
+    lower_blue = np.array([110, 50, 75])
+    upper_blue = np.array([130, 255, 255])
+    blue_mask = mask_range(hsv, lower_blue, upper_blue)
+    blue_mask = close_img(blue_mask, 3)
+
+    # total_mask=black and not blue
+    total_mask = np.multiply(black_mask, 255 - blue_mask)
+    res_black = apply_mask(img, total_mask)
+    res_black = open_img(res_black, 3)
+
+    gray = get_gray_scale(res_black)
+    hough_circles = get_hough_circles(gray)
+
+    contours = get_contours(gray)
+    contour_circles = get_contour_circles(contours)
+
+    # finding the circles that contour_circles and hough_circles agree on
+    confirmed_circles = []
+    for contour_circle in contour_circles:
+        for hough_circle in hough_circles:
+            if np.linalg.norm(contour_circle[:2] - hough_circle[:2]) < DIST_THRESHOLD:
+                new_radius = max(contour_circle[2], hough_circle[2])
+                tmp_circle = contour_circle.copy()
+                tmp_circle[2] = new_radius
+                confirmed_circles.append(tmp_circle)
+
+    # looking for circles from hough_circles that are inside a contour
+    for circle in hough_circles:
+        if MIN_RADIUS < circle[2] < MAX_RADIUS:
+            for contour in contours:
+                if cv2.pointPolygonTest(contour, (circle[0], circle[1]), True) > 0:
+                    # cv2.circle(img, (circle[0], circle[1]), circle[2], (0, 255, 0), 2)
+                    new_circle = True
+                    for confirmed_circle in confirmed_circles:
+                        if np.linalg.norm(confirmed_circle[:2] - circle[:2]) < MIN_DIST:
+                            confirmed_circle[2] = max(confirmed_circle[2], circle[2])
+                            new_circle = False
+                            break
+                    if new_circle:
+                        confirmed_circles.append(circle)
+    return confirmed_circles
 main()
 
 
