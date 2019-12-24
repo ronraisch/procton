@@ -4,8 +4,8 @@ import numpy as np
 import Foreground_board
 
 def get_corners():
-    # only_board_path = "C:\\Users\\t8545065\\Desktop\\Lil project\\procton\\Board detection\\Board_size Detection\\board.jpg"
-    # background_path = "C:\\Users\\t8545065\\Desktop\\Lil project\\procton\\Board detection\\Board_size Detection\\emptyBackgrounds"
+    # only_board_path = "C:\\Users\\t8545065\\Desktop\\Lil project\\procton\\Board_detection_manager\\Board_size Detection\\board.jpg"
+    # background_path = "C:\\Users\\t8545065\\Desktop\\Lil project\\procton\\Board_detection_manager\\Board_size Detection\\emptyBackgrounds"
     # threshold = [0, 0, 35]
     # foreground = Foreground_board.foreground_poc(threshold, only_board_path, background_path, hsv=True)
     # # kernel = np.ones((2, 2), np.uint8)

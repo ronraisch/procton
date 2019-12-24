@@ -67,7 +67,7 @@ def four_point_transform(image, pts):
     # return the warped image
     return warped
 
-filename = 'C:\\Users\\t8709339\\Desktop\\talpiot\\procton\\Board detection\\board_reshape\\test.jpeg'
+filename = 'C:\\Users\\t8709339\\Desktop\\talpiot\\procton\\Board_detection_manager\\board_reshape\\test.jpeg'
 img = cv2.imread(filename, cv2.IMREAD_COLOR)
 img=four_point_transform(img,np.array([[182,388],[564,390],[99,669],[634,670]]))
 cv2.imshow('detected circles', img)

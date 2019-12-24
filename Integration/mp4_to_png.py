@@ -1,4 +1,4 @@
-path = "C:\\Users\\t8709339\\Desktop\\talpiot\\procton\\Board detection\\Soldier Detection\\stds"
+path = "C:\\Users\\t8709339\\Desktop\\talpiot\\procton\\Board_detection_manager\\Soldier_Detection\\stds"
 import os
 
 

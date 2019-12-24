@@ -273,7 +273,7 @@ def our_turn(player_playing):
     :return:
     """
     dice_roll = roll_dice()
-    picture_path = "C:\\Users\\t8545065\\Desktop\\Lil project\\procton\\Board detection\\Soldier Detection\\test_photos\\WIN_20191209_17_00_20_Pro.jpg"
+    picture_path = "C:\\Users\\t8545065\\Desktop\\Lil project\\procton\\Board_detection_manager\\Soldier_Detection\\test_photos\\WIN_20191209_17_00_20_Pro.jpg"
     white_location_vector, black_location_vector, dice_roll = get_locations(picture_path, dice_roll)
     # found_error = check_locations(location_vector)
     # while found_error:  # and handle problems
