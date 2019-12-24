@@ -106,6 +106,12 @@ def draw_circles(img, circles, color=(0, 255, 0)):
         cv2.circle(img, (int(circle[0]), int(circle[1])), int(circle[2]), color, 2)
 
 
+def get_drew_circles(img, circles, color=(0, 255, 0)):
+    tmp = img.copy()
+    draw_circles(tmp, circles, color)
+    return tmp
+
+
 def main():
     img = take_picture()
     show_img(img, "Original image")
@@ -163,8 +169,9 @@ def main():
     show_img(img, "detected soldiers Image")
 
 
-def get_result():
-    img = take_picture()
+def get_results(img=None):
+    if img is None:
+        img = take_picture()
 
     # hsv is the conversion of RGB to HSV
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -214,8 +221,8 @@ def get_result():
                     if new_circle:
                         confirmed_circles.append(circle)
     return confirmed_circles
-main()
 
+main()
 
 #### NOT USED FUNCTIONS ###
 

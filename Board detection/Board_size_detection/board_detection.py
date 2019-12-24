@@ -36,7 +36,7 @@ def get_gray_image(img):
 def get_edges(gray=None, img=None):
     if gray is None:
         gray = get_gray_image(img)
-    edges = cv2.Canny(gray, 700, 900, apertureSize=5)
+    edges = cv2.Canny(gray, 550, 680, apertureSize=5)
     edges = cv2.morphologyEx(edges, kernel=None, op=cv2.MORPH_CLOSE, iterations=2)
     return edges
 
@@ -99,8 +99,9 @@ def main():
     show_img(img, "Output Image")
 
 
-def get_result():
-    img = take_picture()
+def get_results(img=None):
+    if img is None:
+        img = take_picture()
     edges = get_edges(img=img)
     contours = get_contours(edges)
     filtered_contours = get_relevant_contours(contours, img)
@@ -108,7 +109,7 @@ def get_result():
     return get_poly_hull(biggest_contour)
 
 
-main()
+# main()
 
 # cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 # cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
