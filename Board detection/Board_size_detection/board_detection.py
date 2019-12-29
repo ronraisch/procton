@@ -36,7 +36,7 @@ def get_gray_image(img):
 def get_edges(gray=None, img=None):
     if gray is None:
         gray = get_gray_image(img)
-    edges = cv2.Canny(gray, 550, 680, apertureSize=5)
+    edges = cv2.Canny(gray, 550, 750, apertureSize=5)
     edges = cv2.morphologyEx(edges, kernel=None, op=cv2.MORPH_CLOSE, iterations=2)
     return edges
 

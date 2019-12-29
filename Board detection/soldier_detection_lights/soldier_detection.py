@@ -1,13 +1,16 @@
 import numpy as np
 import cv2
+import Board_size_detection.board_detection as bd
+import board_resize.perspective_change as pc
 
 RESIZE_WIDTH = 1140
 RESIZE_HEIGHT = 640
 
-MIN_RADIUS = 25
-MAX_RADIUS = 50
-MIN_DIST = 60
+MIN_RADIUS = 30
+MAX_RADIUS = 60
+MIN_DIST = 30
 DIST_THRESHOLD = 20
+RECT_ERROR = 0.95
 
 
 def define_camera():
@@ -101,6 +104,58 @@ def get_contour_circles(contours):
     return contour_circles
 
 
+def get_contour_rectangles(contours):
+    """
+    This function returns all the circles (with radius in wanted range) that surrounds a contour
+    :param contours: the contours to search in
+    :return: all the circles that where found
+    """
+    contour_rectangles = []
+    for contour in contours:
+        if len(contour) >= 4:
+            rect = cv2.minAreaRect(contour)
+            box = cv2.boxPoints(rect)
+            box = np.int0(box)
+            contour_rectangles.append(box)
+    return contour_rectangles
+
+
+def rotate_vector_by_angle(vec, angle):
+    c, s = np.cos(angle), np.sin(angle)
+    R = np.array(((c, -s), (s, c)))
+    return np.multiply(R, vec)
+
+
+def get_circles_from_rectangle(rect):
+    d1 = np.linalg.norm(rect[1] - rect[0])
+    d2 = np.linalg.norm(rect[2] - rect[0])
+    rect_width = max(d1, d2)
+    rect_height = min(d1, d2)
+    m = int((d1 <= d2))
+    k = int(rect_width / rect_height + (1 - RECT_ERROR))
+    v = 0.5 * rotate_vector_by_angle(m * (rect[1] - rect[2]) + (1 - m) * (rect[2] - rect[0]),)
+    v = np.concatenate((v, np.array([0])))
+    circles = []
+    starting_circle = m / 2 * np.array(
+        [rect[0, 0] + rect[1, 0], rect[0, 1] + rect[1, 1], rect_height]) + (1 - m) / 2 * np.array(
+        [rect[0, 0] + rect[2, 0], rect[0, 1] + rect[2, 1], rect_height])
+    for n in range(k):
+        circles.append(starting_circle + (1 + 2 * n) * v)
+    return circles
+
+
+def get_circles_from_rectangles(rectangles):
+    circles = []
+    for rect in rectangles:
+        circles += get_circles_from_rectangle(rect)
+    return circles
+
+
+def draw_rectangles(img, rectangles, color=(0, 255, 0)):
+    for rect in rectangles:
+        cv2.drawContours(img, [rect], 0, color, 2)
+
+
 def draw_circles(img, circles, color=(0, 255, 0)):
     for circle in circles:
         cv2.circle(img, (int(circle[0]), int(circle[1])), int(circle[2]), color, 2)
@@ -116,11 +171,17 @@ def main():
     img = take_picture()
     show_img(img, "Original image")
 
+    # hull, poly_hull = bd.get_results(img)
+    # poly_hull = np.reshape(poly_hull, (4, 2))
+    # img = pc.four_point_transform(img, poly_hull)
+    #
+    # show_img(img, "perspective image")
+
     # hsv is the conversion of RGB to HSV
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
-    lower_black = np.array([70, 0, 0])
-    upper_black = np.array([150, 160, 100])
+    lower_black = np.array([80, 0, 0])
+    upper_black = np.array([175, 80, 100])
     black_mask = mask_range(hsv, lower_black, upper_black)
 
     lower_blue = np.array([110, 50, 75])
@@ -131,25 +192,30 @@ def main():
     # total_mask=black and not blue
     total_mask = np.multiply(black_mask, 255 - blue_mask)
     res_black = apply_mask(img, total_mask)
-    res_black = open_img(res_black, 3)
+    res_black = close_img(res_black, 3)
     show_img(res_black, "Color mask Image")
 
     gray = get_gray_scale(res_black)
     hough_circles = get_hough_circles(gray)
+    show_img(get_drew_circles(img, hough_circles), "Hough Circles Image")
 
     contours = get_contours(gray)
     contour_circles = get_contour_circles(contours)
+    # contour_rectangles = get_contour_rectangles(contours)
     draw_contours(img, contours)
+    # draw_rectangles(img, contour_rectangles)
+    # contour_circles += get_circles_from_rectangles(contour_rectangles)
+    # draw_circles(img, contour_circles, color=(150, 200, 100))
 
     # finding the circles that contour_circles and hough_circles agree on
     confirmed_circles = []
     for contour_circle in contour_circles:
         for hough_circle in hough_circles:
             if np.linalg.norm(contour_circle[:2] - hough_circle[:2]) < DIST_THRESHOLD:
-                new_radius = max(contour_circle[2], hough_circle[2])
-                tmp_circle = contour_circle.copy()
-                tmp_circle[2] = new_radius
-                confirmed_circles.append(tmp_circle)
+                # new_radius = max(contour_circle[2], hough_circle[2])
+                # tmp_circle = contour_circle.copy()
+                # tmp_circle[2] = new_radius
+                confirmed_circles.append(contour_circle)
 
     # looking for circles from hough_circles that are inside a contour
     for circle in hough_circles:
@@ -195,6 +261,8 @@ def get_results(img=None):
 
     contours = get_contours(gray)
     contour_circles = get_contour_circles(contours)
+    contours_rectangles = get_contour_rectangles(contours)
+    draw_rectangles(img, contours_rectangles, (255, 0, 100))
 
     # finding the circles that contour_circles and hough_circles agree on
     confirmed_circles = []
@@ -221,6 +289,7 @@ def get_results(img=None):
                     if new_circle:
                         confirmed_circles.append(circle)
     return confirmed_circles
+
 
 main()
 

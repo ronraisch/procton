@@ -15,7 +15,7 @@ def main():
 
     hull, poly_hull = bd.get_results(img)
     poly_hull = np.reshape(poly_hull, (4, 2))
-    img = pc.four_point_transform(img, poly_hull)
+    img = pc.four_point_transform(img, hull)
     # show_img(img, "perspective image")
 
 
