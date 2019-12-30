@@ -1,6 +1,7 @@
 # import numpy as np
 # from game_state import GameState
-from GUI import *
+from EMM_manager.GUI import *
+from EMM_manager.game_state import GameState
 
 
 def set_dices(state):

@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 from EMM_manager import GUI, EMM
+from EMM_manager.game_state import GameState
 import Board
 from Constants import *
 from Board_detection_manager.Soldier_Detection import ImageProcessing
@@ -20,6 +21,39 @@ img_test = cv2.imread(
 def initialize_board():
     global board
     board = Board.Board()
+
+
+def opponent_did_turn(prev_board):
+    if prev_board is None:
+        return False
+    prev_state = GameState(prev_board)
+    all_states = prev_state.get_possible_states(-1)
+    if board.get_board_position() in all_states:
+        return True
+    print("Mistake")
+    return False
+
+
+def check_for_opp_turn():
+    dice_roll = input("Opponent Dice Result: ")
+    dice_result = [int(dice_roll[0]), int(dice_roll[2])]
+    prev_board = None
+    while not opponent_did_turn(prev_board):
+        finish_line = input("Please enter 'Done' if finished ")
+        while finish_line != "Done" and finish_line != "done":
+            finish_line = input("Please enter 'Done' if finished ")
+        prev_board = board.get_board_position()
+        ret, frame = cap.read()
+        img = cv2.cvtColor(frame, cv2.IMREAD_COLOR)
+        board.update_from_camera(img, dice_result)
+    print("Spotted opponent turn")
+
+def check_if_pic_good(pre_board_setup):
+    pre_soldier_count = np.sum(np.abs(pre_board_setup))
+    new_soldier_count = np.sum(np.abs(board.get_board_position()))
+    if pre_soldier_count != new_soldier_count:
+        return False
+    return True
 
 
 def get_xy_from_triangle_number(num_triangle, triangle_stack, curr_radius):
@@ -130,13 +164,20 @@ def do_move(all_moves, result_img):  # does the move - showing on GUI
 
 player_turn = 1
 initialize_board()
+pre_board_position = None
 while True:
     dice_roll = input("Dice Result: ")
     dice_result = [int(dice_roll[0]), int(dice_roll[2])]
     # Capture frame-by-frame
+
     ret, frame = cap.read()
     img = cv2.cvtColor(frame, cv2.IMREAD_COLOR)
     board.update_from_camera(img, dice_result)  # update the Board according to the image
+    while not check_if_pic_good(pre_board_position):
+        pre_board_position = board.get_board_position()
+        ret, frame = cap.read()
+        img = cv2.cvtColor(frame, cv2.IMREAD_COLOR)
+        board.update_from_camera(img, dice_result)
     GUI.GUI_state(board.get_board_position())  # show on GUI
     result = EMM.EMM(board.get_board_position(), 1, player_turn)  # get EMM move
     new_board = result[1]
@@ -147,6 +188,7 @@ while True:
     cv2.imshow("result", img)  # show move done
     cv2.waitKey(0)
     player_turn = -1 * player_turn
+    check_for_opp_turn()
 
 
 # When everything done, release the capture
