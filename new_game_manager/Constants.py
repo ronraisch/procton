@@ -1,3 +1,5 @@
+import cv2
+
 NUMBER_OF_TRIANGLES = 24
 WHITE = 1
 BLACK = -1
@@ -6,3 +8,12 @@ HEIGHT = 620
 A = 50
 Y_MIDDLE = HEIGHT / 2
 DELTA = WIDTH - NUMBER_OF_TRIANGLES / 2 * A
+STARTING_BOARD = [0, -2, 0, 0, 0, 0, 5, 0, 3, 0, 0, 0, -5, 5, 0, 0, 0, -3, 0, -5, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0]
+APPROX_RADIUS = 40
+BOARD_TO_MOTOR_RATIO = 10
+
+
+# Camera settings:
+cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)

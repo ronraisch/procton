@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-import Foreground
+from Board_detection_manager.Soldier_Detection import Foreground
 
 def get_detected_soldiers(filename):
     DEFAULF = 0

@@ -3,11 +3,12 @@ import cv2
 from EMM_manager import GUI, EMM
 import Board
 from Constants import *
+from Board_detection_manager.Soldier_Detection import ImageProcessing
 
-# Camera settings:
-cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+# # Camera settings:
+# cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+# cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+# cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
 
 # Debugging uses:
